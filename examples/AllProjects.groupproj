@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BA2CE799-5BB4-4084-B6AB-EFC5B17C871D}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\DelphiAMQP.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Simple\SimpleExample.dproj">
+            <Dependencies>..\DelphiAMQP.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DelphiAMQP">
+        <MSBuild Projects="..\DelphiAMQP.dproj"/>
+    </Target>
+    <Target Name="DelphiAMQP:Clean">
+        <MSBuild Projects="..\DelphiAMQP.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DelphiAMQP:Make">
+        <MSBuild Projects="..\DelphiAMQP.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SimpleExample" DependsOnTargets="DelphiAMQP">
+        <MSBuild Projects="Simple\SimpleExample.dproj"/>
+    </Target>
+    <Target Name="SimpleExample:Clean" DependsOnTargets="DelphiAMQP:Clean">
+        <MSBuild Projects="Simple\SimpleExample.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SimpleExample:Make" DependsOnTargets="DelphiAMQP:Make">
+        <MSBuild Projects="Simple\SimpleExample.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DelphiAMQP;SimpleExample"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DelphiAMQP:Clean;SimpleExample:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DelphiAMQP:Make;SimpleExample:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
