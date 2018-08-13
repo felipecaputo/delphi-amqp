@@ -36,8 +36,8 @@ type
 implementation
 
 uses
-  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Fames.ConnectionStartHeader,
-  DelphiAMQP.Constants;
+  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Fames.ConnectionStart,
+  DelphiAMQP.Constants, DelphiAMQP.Frames.Factory;
 
 const
   sPROTOCOL_HEADER = 'AMQP';
@@ -60,7 +60,7 @@ var
   Response: TIdBytes;
   Header: TAMQPFrameHeader;
   oStream: TBytesStream;
-  oFrame: TAMQPConnectionStartHeaderFrame;
+  oFrame: TAMQPConnectionStartFrame;
 begin
   FCon.ReadTimeout := 1000;
   FCon.Socket.Write(sPROTOCOL_HEADER + Chr(0) + Chr(0) + Chr(9) + Chr(1), IndyTextEncoding_ASCII());
@@ -73,9 +73,8 @@ begin
     if Header.FrameType <> 1 then
       raise Exception.Create('Error Message');
 
-    oFrame := TAMQPConnectionStartHeaderFrame.Create;
-    oStream.Position := 0;
-    oFrame.Parse(oStream);
+    oFrame := TAMQPFrameFactory.BuildFrame(oStream) as TAMQPConnectionStartFrame;
+    oFrame.Read(oStream);
     Response := nil;
     FCon.Socket.ReadBytes(Response, 1);
     if Response[0] <> FRAME_END then

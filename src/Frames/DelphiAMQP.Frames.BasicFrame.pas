@@ -23,17 +23,17 @@ type
     procedure Read(const AStream: TBytesStream);
     procedure Write(const AStream: TBytesStream);
 
-    property ClassId: Word read FClassId write FClassId;
-    property MethodId: Word read FMethodId write FMethodId;
-
     property FrameHeader: TAMQPFrameHeader read FFrameHeader;
     property Content: TBytesStream read FContentStream;
+  published
+    property ClassId: Word read FClassId write FClassId;
+    property MethodId: Word read FMethodId write FMethodId;
   end;
 
 implementation
 
 uses
-  DelphiAMQP.AMQPValue, DelphiAMQP.Util.Helpers;
+  DelphiAMQP.AMQPValue, DelphiAMQP.Util.Helpers, System.TypInfo;
 
 { TAMQPBasicFrame }
 
@@ -52,9 +52,7 @@ var
   objProp: TRttiProperty;
   prop: TAMQPValueType;
 begin
-  FClassId := AStream.AMQPReadShortUInt;
-  MethodId := AStream.AMQPReadShortUInt;
-
+  methodParameters := Self.Parameters;
   context := TRttiContext.Create;
   try
     objType := context.GetType(Self);

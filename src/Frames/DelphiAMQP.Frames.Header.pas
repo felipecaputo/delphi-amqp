@@ -3,10 +3,10 @@ unit DelphiAMQP.Frames.Header;
 interface
 
 uses
-  System.SysUtils;
+  System.Classes, System.SysUtils;
 
 type
-  TAMQPFrameHeader = class
+  TAMQPFrameHeader = class(TPersistent)
   private
     FFrameType: Byte;
     FChannel: Word;
@@ -23,6 +23,8 @@ type
 
     procedure Load(const APayload: TBytes);
 
+    procedure Assign(ASource: TPersistent); override;
+
     property FrameType: Byte read GetFrameType write SetFrameType;
     property Channel: Word read GetChannel write SetChannel;
     property Size: FixedUInt read GetSize write SetSize;
@@ -31,7 +33,7 @@ type
 implementation
 
 uses
-  System.Classes, DelphiAMQP.Util.Helpers;
+  DelphiAMQP.Util.Helpers;
 
 { TAMQPFrameHeader }
 
@@ -88,6 +90,16 @@ end;
 procedure TAMQPFrameHeader.SetSize(const Value: FixedUInt);
 begin
   FSize := Value;
+end;
+
+procedure TAMQPFrameHeader.Assign(ASource: TPersistent);
+begin
+  if not (ASource is TAMQPFrameHeader) then
+    raise Exception.Create('Source must be a TAMQPFrameHeader object.');
+
+  FFrameType := (ASource as TAMQPFrameHeader).FrameType;
+  FChannel := (ASource as TAMQPFrameHeader).Channel;
+  FSize := (ASource as TAMQPFrameHeader).Size;
 end;
 
 end.

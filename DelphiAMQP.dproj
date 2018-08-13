@@ -118,7 +118,7 @@
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.BasicFrame.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.Header.pas"/>
         <DCCReference Include="src\Util\DelphiAMQP.Util.Helpers.pas"/>
-        <DCCReference Include="src\Frames\DelphiAMQP.Fames.ConnectionStartHeader.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Fames.ConnectionStart.pas"/>
         <DCCReference Include="src\DelphiAMQP.AMQPValue.pas"/>
         <DCCReference Include="src\DelphiAMQP.Constants.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.ConnectionStartOk.pas"/>
@@ -539,6 +539,9 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
+            <UnitTesting>
+                <TestProjectName>C:\src\github\felipecaputo\delphi-amqp\tests\DelphiAMQPTests.dproj</TestProjectName>
+            </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

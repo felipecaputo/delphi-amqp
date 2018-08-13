@@ -21,6 +21,7 @@ type
 
     function Parameters(): TArray<string>; override;
 
+  published
     property VersionMajor: TAMQPValueType read FVersionMajor write FVersionMajor;
     property VersionMinor: TAMQPValueType read FVersionMinor write FVersionMinor;
     property ServerProperties: TAMQPValueType read FServerProperties write FServerProperties;
@@ -32,18 +33,20 @@ type
 implementation
 
 uses
-  DelphiAMQP.Util.Helpers;
+  DelphiAMQP.Util.Helpers, DelphiAMQP.Constants;
 
 { TAMQPConnectionStartHeader }
 
 constructor TAMQPConnectionStartFrame.Create(AOwner: TComponent);
 begin
   inherited;
-  FVersionMajor := TAMQPValueType.Create;
-  FVersionMinor := TAMQPValueType.Create;
-  FServerProperties := TAMQPValueType.Create;
-  FMecanisms := TAMQPValueType.Create;
-  FLocales := TAMQPValueType.Create;
+  FClassId := Ord(TAMQPClasses.Connection);
+  FMethodId := Ord(TAMQPConnectionMethods.Start);
+  FVersionMajor := TAMQPValueType.Create(TAMQPValueType.ShortShortUInt);
+  FVersionMinor := TAMQPValueType.Create(TAMQPValueType.ShortShortUInt);
+  FServerProperties := TAMQPValueType.Create(TAMQPValueType.FieldTable);
+  FMecanisms := TAMQPValueType.Create(TAMQPValueType.LongString);
+  FLocales := TAMQPValueType.Create(TAMQPValueType.LongString);
 end;
 
 function TAMQPConnectionStartFrame.Parameters: TArray<string>;
@@ -58,16 +61,11 @@ end;
 
 procedure TAMQPConnectionStartFrame.Parse(const AStream: TBytesStream);
 begin
-  AStream.Read(FVersionMajor, 1);
-  AStream.Read(FVersionMinor, 1);
-  ServerProperties := TAMQPValueType.Create;
-  ServerProperties.Parse(TAMQPValueType.FieldTable, AStream);
-
-  Mecanisms := TAMQPValueType.Create;
-  Mecanisms.Parse(TAMQPValueType.LongString, AStream);
-
-  Locales := TAMQPValueType.Create;
-  Locales.Parse(TAMQPValueType.LongString, AStream);
+  FVersionMajor.Parse(AStream);
+  FVersionMinor.Parse(AStream);
+  ServerProperties.Parse(AStream);
+  Mecanisms.Parse(AStream);
+  Locales.Parse(AStream);
 end;
 
 end.
