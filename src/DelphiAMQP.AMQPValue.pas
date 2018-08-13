@@ -16,6 +16,9 @@ type
     FAMQPTable: TDictionary<string, TAMQPValueType>;
     FFieldArray: TList<TAMQPValueType>;
 
+    procedure GetScalarValue(var Dest; const Size: Integer);
+    procedure SetScalarValue(const Source; const Size: Integer);
+
     procedure ReadValue(const AStream: TBytesStream; const ASize: Integer);
     procedure ParseShortString(const AStream: TBytesStream);
     procedure ParseLongString(const AStream: TBytesStream);
@@ -28,8 +31,20 @@ type
     procedure SetAsString(const AValue: string);
     procedure SetShortString(const AValue: string);
     procedure SetLongString(const AValue: string);
+
     function GetAsByte: Byte;
     procedure SetAsByte(const Value: Byte);
+
+    function GetAsWord: Word;
+    procedure SetAsWord(const AValue: Word);
+    function GetAsUInt32: UInt32;
+    procedure SetAsUInt32(const Value: UInt32);
+    function GetAsInt32: Int32;
+    procedure SetAsInt32(const Value: Int32);
+    function GetAsInt64: Int64;
+    procedure SetAsInt64(const Value: Int64);
+    function GetAsInt8: Int8;
+    procedure SetAsInt8(const Value: Int8);
   public
     const
       Boolean = 't';
@@ -59,8 +74,15 @@ type
     procedure Write(AStream: TBytesStream);
 
     property ValueType: Char read FValueType write FValueType;
+
+    //Get typed values
     property AsString: string read GetAsString Write SetAsString;
     property AsByte: Byte read GetAsByte Write SetAsByte;
+    property AsInt8: Int8 read GetAsInt8 write SetAsInt8;
+    property AsWord: Word read GetAsWord write SetAsWord;
+    property AsUInt32: UInt32 read GetAsUInt32 write SetAsUInt32;
+    property AsInt32: Int32 read GetAsInt32 write SetAsInt32;
+    property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
   end;
 
 implementation
@@ -78,12 +100,32 @@ begin
   Result := FValue[0];
 end;
 
+function TAMQPValueType.GetAsInt32: Int32;
+begin
+  GetScalarValue(Result, SizeOf(Int32));
+end;
+
+function TAMQPValueType.GetAsInt8: Int8;
+begin
+  GetScalarValue(Result, SizeOf(Int8));
+end;
+
 function TAMQPValueType.GetAsString: string;
 var
   offset: Byte;
 begin
   offset := IfThen(TAMQPValueType.ShortString = FValueType, 1, 4);
   Result := TEncoding.ANSI.GetString(FValue, offset, Length(FValue) - offset);
+end;
+
+function TAMQPValueType.GetAsUInt32: UInt32;
+begin
+  GetScalarValue(Result, SizeOf(UInt32));
+end;
+
+function TAMQPValueType.GetAsInt64: Int64;
+begin
+  GetScalarValue(Result, SizeOf(UInt64));
 end;
 
 procedure TAMQPValueType.Parse(const AType: Char; const AStream: TBytesStream);
@@ -183,6 +225,16 @@ begin
   FValue[0] := Value;
 end;
 
+procedure TAMQPValueType.SetAsInt32(const Value: Int32);
+begin
+  SetScalarValue(Value, SizeOf(Int32));
+end;
+
+procedure TAMQPValueType.SetAsInt8(const Value: Int8);
+begin
+  SetScalarValue(Value, SizeOf(Int8));
+end;
+
 procedure TAMQPValueType.SetAsString(const AValue: string);
 begin
   case ValueType of
@@ -191,6 +243,16 @@ begin
   else
     raise EAMQPParserException.Create('Field is not a string type.');
   end;
+end;
+
+procedure TAMQPValueType.SetAsUInt32(const Value: UInt32);
+begin
+  SetScalarValue(Value, SizeOf(UInt32));
+end;
+
+procedure TAMQPValueType.SetAsInt64(const Value: Int64);
+begin
+  SetScalarValue(Value, SizeOf(UInt64));
 end;
 
 procedure TAMQPValueType.Write(AStream: TBytesStream);
@@ -206,6 +268,12 @@ end;
 procedure TAMQPValueType.Parse(const AStream: TBytesStream);
 begin
   Self.Parse(FValueType, AStream);
+end;
+
+procedure TAMQPValueType.SetScalarValue(const Source; const Size: Integer);
+begin
+  SetLength(FValue, Size);
+  AMQPMoveEx(Source, FValue, 0, Size);
 end;
 
 procedure TAMQPValueType.SetShortString(const AValue: string);
@@ -233,8 +301,27 @@ begin
   stringSize := Length(AValue);
 
   SetLength(FValue, 4 + stringSize);
-  AMQPMoveHex(stringSize, FValue, 0, SizeOf(UInt32));
+  AMQPMoveEx(stringSize, FValue, 0, SizeOf(UInt32));
   Move(TEncoding.ANSI.GetBytes(AValue)[0], FValue[4], stringSize);
+end;
+
+function TAMQPValueType.GetAsWord: Word;
+begin
+  GetScalarValue(Result, 2);
+end;
+
+procedure TAMQPValueType.GetScalarValue(var Dest; const Size: Integer);
+var
+  temp: TBytes;
+begin
+  SetLength(temp, Size);
+  AMQPMoveEx(FValue[0], temp, 0, Size);
+  Move(temp[0], Dest, Size);
+end;
+
+procedure TAMQPValueType.SetAsWord(const AValue: Word);
+begin
+  SetScalarValue(AValue, SizeOf(Word));
 end;
 
 end.

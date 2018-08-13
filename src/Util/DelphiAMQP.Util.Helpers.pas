@@ -19,13 +19,13 @@ type
     class procedure WriteShortString(Data: TBytes; const AValue: string);
   end;
 
-  procedure AMQPMoveHex(const Source; var Dest: TBytes; Offset, Count: Integer);
+  procedure AMQPMoveEx(const Source; var Dest: TBytes; Offset, Count: Integer);
 
 implementation
 
 { TAMQPStreamHelper }
 
-procedure AMQPMoveHex(const Source; var Dest: TBytes; Offset, Count: Integer);
+procedure AMQPMoveEx(const Source; var Dest: TBytes; Offset, Count: Integer);
 var
   temp: TBytes;
   I: Integer;
