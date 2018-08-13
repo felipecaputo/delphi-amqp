@@ -19,9 +19,22 @@ type
     class procedure WriteShortString(Data: TBytes; const AValue: string);
   end;
 
+  procedure AMQPMoveHex(const Source; var Dest: TBytes; Offset, Count: Integer);
+
 implementation
 
 { TAMQPStreamHelper }
+
+procedure AMQPMoveHex(const Source; var Dest: TBytes; Offset, Count: Integer);
+var
+  temp: TBytes;
+  I: Integer;
+begin
+  SetLength(temp, Count);
+  Move(Source, temp[0], Count);
+  for I := Pred(Count) downto 0 do
+    Move(temp[I], Dest[Offset + Abs(Count - Succ(I))], SizeOf(Byte));
+end;
 
 function TAMQPStreamHelper.AMQPReadLongInt: Int32;
 var

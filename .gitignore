@@ -66,3 +66,5 @@ __recovery/
 *.stat
 DelphiAMQP.res
 examples/Simple/SimpleExample.res
+tests/Win32/Debug/dunitx-results.xml
+tests/Win32/Debug/dunitx-results.xml
