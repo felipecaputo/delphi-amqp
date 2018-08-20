@@ -71,6 +71,16 @@ type
     [TestCase('Middle', '50000,50000')]
     [TestCase('Highest', '9223372036854775807,9223372036854775807')]
     procedure TestUInt64(const AValue: Int64; const Expected: string);
+    [Test]
+    [MaxTimeAttribute(1)]
+    [TestCase('Lowest', '1.3256,2,1.32')]
+    [TestCase('High precision', '1.23456789,9,1.23456789')]
+    procedure TestDecimal(const AValue: Double; const Precision: Byte; const Expected: string);
+    [Test]
+    [MaxTimeAttribute(1)]
+    [TestCase('True', 'True,True')]
+    [TestCase('False', 'False,False')]
+    procedure TestBool(const AValue, Expected: Boolean);
   end;
 
 implementation
@@ -97,11 +107,29 @@ begin
   Assert.AreEqual(IntToStr(FAmqpValue.AsInt8), Expected);
 end;
 
+procedure TDelphiAMQPTests.TestBool(const AValue, Expected: Boolean);
+begin
+  FAmqpValue.ValueType := TAMQPValueType.Bool;
+  FAmqpValue.AsBoolean := AValue;
+  Assert.AreEqual(FAmqpValue.AsBoolean, Expected);
+  Assert.AreEqual(Length(FAmqpValue.Data), 1);
+end;
+
 procedure TDelphiAMQPTests.TestByte(const AValue: Byte; const Expected: string);
 begin
   FAmqpValue.ValueType := TAMQPValueType.ShortShortUInt;
   FAmqpValue.AsByte := AValue;
   Assert.AreEqual(IntToStr(FAmqpValue.AsByte), Expected);
+end;
+
+procedure TDelphiAMQPTests.TestDecimal(const AValue: Double; const Precision: Byte;
+  const Expected: string);
+begin
+  FAmqpValue.ValueType := TAMQPValueType.DecimalValue;
+  FAmqpValue.FloatPrecision := Precision;
+  FAmqpValue.AsDecimal := AValue;
+  Assert.AreEqual(FloatToStr(FAmqpValue.AsDecimal).Replace(',','.',[rfReplaceAll]), Expected);
+  Assert.AreEqual(Length(FAmqpValue.Data), 5);
 end;
 
 procedure TDelphiAMQPTests.TestInt32(const AValue: Int32; const Expected:
@@ -139,6 +167,7 @@ begin
   FAmqpValue.ValueType := TAMQPValueType.LongLongInt;
   FAmqpValue.AsInt64 := AValue;
   Assert.AreEqual(IntToStr(FAmqpValue.AsInt64), Expected);
+  Assert.AreEqual(Length(FAmqpValue.Data), 8);
 end;
 
 procedure TDelphiAMQPTests.TestWord(const AValue: Word; const Expected: string);

@@ -10,11 +10,11 @@ type
 
   TAMQPValueType = class
   private
-    FWriter: TBinaryWriter;
     FValueType: Char;
     FValue: TBytes;
     FAMQPTable: TDictionary<string, TAMQPValueType>;
     FFieldArray: TList<TAMQPValueType>;
+    FFloatPrecision: Byte;
 
     procedure GetScalarValue(var Dest; const Size: Integer);
     procedure SetScalarValue(const Source; const Size: Integer);
@@ -45,9 +45,13 @@ type
     procedure SetAsInt64(const Value: Int64);
     function GetAsInt8: Int8;
     procedure SetAsInt8(const Value: Int8);
+    function GetAsDecimal: Double;
+    procedure SetAsDecimal(const AValue: Double);
+    function GetAsBoolean: Boolean;
+    procedure SetAsBoolean(const Value: Boolean);
   public
     const
-      Boolean = 't';
+      Bool = 't';
       ShortShortInt = 'b';
       ShortShortUInt = 'B';
       ShortInt = 's';
@@ -57,7 +61,7 @@ type
       LongLongInt = 'l';
 //      LongLongUInt = 'l';
       Float = 'f';
-      Double = 'd';
+      _Double = 'd';
       DecimalValue = 'D';
       ShortString = 'Z';
       LongString = 'S';
@@ -67,15 +71,18 @@ type
       ByteArray = 'x';
       NoValue = 'V';
 
-    constructor Create(const AValueType: Char);
+    constructor Create(const AValueType: Char = TAMQPValueType.NoValue);
 
     procedure Parse(const AType: Char; const AStream: TBytesStream); overload;
     procedure Parse(const AStream: TBytesStream); overload;
     procedure Write(AStream: TBytesStream);
 
     property ValueType: Char read FValueType write FValueType;
+    property FloatPrecision: Byte read FFloatPrecision write FFloatPrecision;
+    property Data: TBytes read FValue;
 
     //Get typed values
+    property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
     property AsString: string read GetAsString Write SetAsString;
     property AsByte: Byte read GetAsByte Write SetAsByte;
     property AsInt8: Int8 read GetAsInt8 write SetAsInt8;
@@ -83,6 +90,8 @@ type
     property AsUInt32: UInt32 read GetAsUInt32 write SetAsUInt32;
     property AsInt32: Int32 read GetAsInt32 write SetAsInt32;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
+    property AsDecimal: Double read GetAsDecimal write SetAsDecimal;
+    property AsAMQPTable: TDictionary<string,TAMQPValueType> read FAMQPTable;
   end;
 
 implementation
@@ -95,9 +104,27 @@ uses
 const
   sINVALID_STREAM = 'Invalid stream';
 
+function TAMQPValueType.GetAsBoolean: Boolean;
+begin
+  Result := FValue[0] <> 0;
+end;
+
 function TAMQPValueType.GetAsByte: Byte;
 begin
   Result := FValue[0];
+end;
+
+function TAMQPValueType.GetAsDecimal: Double;
+var
+  precision: Byte;
+  temp: TBytes;
+  value: UInt32;
+begin
+  precision := FValue[0];
+  SetLength(temp, 4);
+  AMQPMoveEx(FValue[1], temp, 0, SizeOf(UInt32));
+  Move(temp[0], value, SizeOf(UInt32));
+  Result := value / Power(10, precision);
 end;
 
 function TAMQPValueType.GetAsInt32: Int32;
@@ -131,10 +158,10 @@ end;
 procedure TAMQPValueType.Parse(const AType: Char; const AStream: TBytesStream);
 begin
   case AType of
-    TAMQPValueType.Boolean, TAMQPValueType.ShortShortInt, TAMQPValueType.ShortShortUInt: ReadValue(AStream, 1);
+    TAMQPValueType.Bool, TAMQPValueType.ShortShortInt, TAMQPValueType.ShortShortUInt: ReadValue(AStream, 1);
     TAMQPValueType.ShortInt, TAMQPValueType.ShortUInt: ReadValue(AStream, 2);
     TAMQPValueType.LongInt, TAMQPValueType.Float, TAMQPValueType.LongUInt: ReadValue(AStream, 4);
-    TAMQPValueType.LongLongInt, TAMQPValueType.Double, TAMQPValueType.Timestamp: ReadValue(AStream, 8);
+    TAMQPValueType.LongLongInt, TAMQPValueType._Double, TAMQPValueType.Timestamp: ReadValue(AStream, 8);
     TAMQPValueType.DecimalValue: ReadValue(AStream, 5);
     TAMQPValueType.ShortString: ParseShortString(AStream);
     TAMQPValueType.LongString: ParseLongString(AStream);
@@ -186,8 +213,8 @@ begin
 end;
 
 procedure TAMQPValueType.ParseFieldArray(const AStream: TBytesStream);
-var
-  size: Integer;
+//var
+//  size: Integer;
 begin
   //TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!;
 end;
@@ -219,10 +246,30 @@ begin
     raise EAMQPParserException.Create(sINVALID_STREAM);
 end;
 
+procedure TAMQPValueType.SetAsBoolean(const Value: Boolean);
+begin
+  SetLength(FValue, 1);
+  FValue[0] := IfThen(Value, 1, 0);
+end;
+
 procedure TAMQPValueType.SetAsByte(const Value: Byte);
 begin
   SetLength(FValue, SizeOf(Byte));
   FValue[0] := Value;
+end;
+
+procedure TAMQPValueType.SetAsDecimal(const AValue: Double);
+var
+  value: UInt32;
+  seed: Double;
+begin;
+  //Double is not so precise so we need to add an extra value after expected precision to make it
+  //return the real integer value
+  seed := 1 / Power(10, FFloatPrecision + 2);
+  value := Trunc( (AValue + seed) * Power(10, FFloatPrecision));
+  SetLength(FValue, 5);
+  FValue[0] := FloatPrecision;
+  AMQPMoveEx(value, FValue, 1, SizeOf(UInt32));
 end;
 
 procedure TAMQPValueType.SetAsInt32(const Value: Int32);
@@ -257,12 +304,14 @@ end;
 
 procedure TAMQPValueType.Write(AStream: TBytesStream);
 begin
+  //TODO: !!!!!!!!!!!!!!!!!!!!!! Prepare data from tables and field array
   AStream.Write(FValue, Length(FValue));
 end;
 
 constructor TAMQPValueType.Create(const AValueType: Char);
 begin
   FValueType := AValueType;
+  FFloatPrecision := 2;
 end;
 
 procedure TAMQPValueType.Parse(const AStream: TBytesStream);
@@ -293,11 +342,7 @@ end;
 procedure TAMQPValueType.SetLongString(const AValue: string);
 var
   stringSize: UInt32;
-  stream: TBytesStream;
 begin
-  if AValue.Length > UInt32.MaxValue then
-    raise EAMQPParserException.Create('Shortstring has more than 255 chars.');
-
   stringSize := Length(AValue);
 
   SetLength(FValue, 4 + stringSize);

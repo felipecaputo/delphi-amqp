@@ -55,7 +55,7 @@ begin
   methodParameters := Self.Parameters;
   context := TRttiContext.Create;
   try
-    objType := context.GetType(Self);
+    objType := context.GetType(Self.ClassType);
     for parameter in methodParameters do
     begin
       objProp := objType.GetProperty(parameter);

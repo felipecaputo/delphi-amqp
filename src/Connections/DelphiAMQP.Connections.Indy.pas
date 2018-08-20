@@ -73,6 +73,7 @@ begin
     if Header.FrameType <> 1 then
       raise Exception.Create('Error Message');
 
+    oStream.Position := 0;
     oFrame := TAMQPFrameFactory.BuildFrame(oStream) as TAMQPConnectionStartFrame;
     oFrame.Read(oStream);
     Response := nil;
