@@ -12,7 +12,7 @@ type
   private
     FValueType: Char;
     FValue: TBytes;
-    FAMQPTable: TDictionary<string, TAMQPValueType>;
+    FAMQPTable: TObjectDictionary<string, TAMQPValueType>;
     FFieldArray: TList<TAMQPValueType>;
     FFloatPrecision: Byte;
 
@@ -49,6 +49,9 @@ type
     procedure SetAsDecimal(const AValue: Double);
     function GetAsBoolean: Boolean;
     procedure SetAsBoolean(const Value: Boolean);
+
+    procedure PrepareData();
+    procedure PreprareFieldTable();
   public
     const
       Bool = 't';
@@ -72,6 +75,7 @@ type
       NoValue = 'V';
 
     constructor Create(const AValueType: Char = TAMQPValueType.NoValue);
+    destructor Destroy; override;
 
     procedure Parse(const AType: Char; const AStream: TBytesStream); overload;
     procedure Parse(const AStream: TBytesStream); overload;
@@ -91,7 +95,7 @@ type
     property AsInt32: Int32 read GetAsInt32 write SetAsInt32;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     property AsDecimal: Double read GetAsDecimal write SetAsDecimal;
-    property AsAMQPTable: TDictionary<string,TAMQPValueType> read FAMQPTable;
+    property AsAMQPTable: TObjectDictionary<string,TAMQPValueType> read FAMQPTable;
   end;
 
 implementation
@@ -103,6 +107,12 @@ uses
 
 const
   sINVALID_STREAM = 'Invalid stream';
+
+destructor TAMQPValueType.Destroy;
+begin
+  FreeAndNil(FAMQPTable);
+  inherited;
+end;
 
 function TAMQPValueType.GetAsBoolean: Boolean;
 begin
@@ -199,7 +209,6 @@ begin
   tableSize := AStream.AMQPReadLongUInt;
   endPos := AStream.Position + tableSize;
 
-  FAMQPTable := TDictionary<string, TAMQPValueType>.Create;
   while AStream.Position < endPos do
     ParseAMQPFieldValuePair(AStream);
 end;
@@ -236,6 +245,42 @@ begin
     raise EAMQPParserException.Create(sINVALID_STREAM);
 
   ReadValue(AStream, stringSize[0]);
+end;
+
+procedure TAMQPValueType.PrepareData;
+begin
+  if FValueType = TAMQPValueType.FieldTable then
+    PreprareFieldTable;
+end;
+
+procedure TAMQPValueType.PreprareFieldTable;
+var
+  TempStream: TBytesStream;
+  KeyValue: TPair<string, TAMQPValueType>;
+  TempField: TAMQPValueType;
+  Size: UInt32;
+begin
+  TempField := nil;
+  TempStream := TBytesStream.Create();
+  try
+    TempField := TAMQPValueType.Create(TAMQPValueType.ShortString);
+    for KeyValue in FAMQPTable.ToArray() do
+    begin
+      TempField.AsString := KeyValue.Key;
+      TempField.Write(TempStream);
+      TempStream.Write(KeyValue.Value.ValueType, 1);
+      KeyValue.Value.Write(TempStream);
+    end;
+
+    Size := TempStream.Size;
+    SetLength(FValue, 4 + Size);
+    AMQPMoveEx(Size, FValue, 0, SizeOf(UInt32));
+    TempStream.Position := 0;
+    TempStream.Read(FValue, 4, Size);
+  finally
+    FreeAndNil(TempStream);
+    FreeAndNil(TempField);
+  end;
 end;
 
 procedure TAMQPValueType.ReadValue(const AStream: TBytesStream; const ASize: Integer);
@@ -304,7 +349,7 @@ end;
 
 procedure TAMQPValueType.Write(AStream: TBytesStream);
 begin
-  //TODO: !!!!!!!!!!!!!!!!!!!!!! Prepare data from tables and field array
+  PrepareData();
   AStream.Write(FValue, Length(FValue));
 end;
 
@@ -312,6 +357,7 @@ constructor TAMQPValueType.Create(const AValueType: Char);
 begin
   FValueType := AValueType;
   FFloatPrecision := 2;
+  FAMQPTable := TObjectDictionary<string,TAMQPValueType>.Create([doOwnsValues]);
 end;
 
 procedure TAMQPValueType.Parse(const AStream: TBytesStream);

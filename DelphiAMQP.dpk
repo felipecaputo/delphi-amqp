@@ -39,10 +39,14 @@ contains
   DelphiAMQP.Frames.BasicFrame in 'src\Frames\DelphiAMQP.Frames.BasicFrame.pas',
   DelphiAMQP.Frames.Header in 'src\Frames\DelphiAMQP.Frames.Header.pas',
   DelphiAMQP.Util.Helpers in 'src\Util\DelphiAMQP.Util.Helpers.pas',
-  DelphiAMQP.Fames.ConnectionStart in 'src\Frames\DelphiAMQP.Fames.ConnectionStart.pas',
+  DelphiAMQP.Frames.ConnectionStart in 'src\Frames\DelphiAMQP.Frames.ConnectionStart.pas',
   DelphiAMQP.AMQPValue in 'src\DelphiAMQP.AMQPValue.pas',
   DelphiAMQP.Constants in 'src\DelphiAMQP.Constants.pas',
   DelphiAMQP.Frames.ConnectionStartOk in 'src\Frames\DelphiAMQP.Frames.ConnectionStartOk.pas',
-  DelphiAMQP.Frames.Factory in 'src\Frames\DelphiAMQP.Frames.Factory.pas';
+  DelphiAMQP.Frames.Factory in 'src\Frames\DelphiAMQP.Frames.Factory.pas',
+  DelphiAMQP.Connections.AMQPConnection in 'src\Connections\DelphiAMQP.Connections.AMQPConnection.pas',
+  DelphiAMQP.Util.Attributes in 'src\Util\DelphiAMQP.Util.Attributes.pas',
+  DelphiAMQP.AMQPTypes in 'src\DelphiAMQP.AMQPTypes.pas',
+  DelphiAMQP.Util.Functions in 'src\Util\DelphiAMQP.Util.Functions.pas';
 
 end.

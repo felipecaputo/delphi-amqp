@@ -22,6 +22,7 @@ type
     constructor Create(const APayload: TBytes);
 
     procedure Load(const APayload: TBytes);
+    procedure Write(const AStream: TBytesStream);
 
     procedure Assign(ASource: TPersistent); override;
 
@@ -90,6 +91,17 @@ end;
 procedure TAMQPFrameHeader.SetSize(const Value: FixedUInt);
 begin
   FSize := Value;
+end;
+
+procedure TAMQPFrameHeader.Write(const AStream: TBytesStream);
+var
+  data: TBytes;
+begin
+  SetLength(data, 7);
+  AMQPMoveEx(FFrameType, data, 0, 1);
+  AMQPMoveEx(FChannel, data, 1, 2);
+  AMQPMoveEx(FSize, data, 3, 4);
+  AStream.Write(data, 7);
 end;
 
 procedure TAMQPFrameHeader.Assign(ASource: TPersistent);

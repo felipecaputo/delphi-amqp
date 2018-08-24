@@ -3,7 +3,7 @@ unit DelphiAMQP.Connections.Indy;
 interface
 
 uses
-  DelphiAMQP.FrameIntf, System.SysUtils, IdTCPClient, System.Classes,
+  DelphiAMQP.Frames.BasicFrame, System.SysUtils, IdTCPClient, System.Classes,
   DelphiAMQP.ConnectionIntf;
 
 type
@@ -15,7 +15,6 @@ type
     FUser: string;
     FPassword: string;
 
-    procedure HandleConnectionStart;
   public
     constructor Create(AOwner: TComponent); override;
 
@@ -28,16 +27,15 @@ type
     function SetUser(const AUser: string): IAMQPTCPConnection;
     function SetPassword(const APassword: string): IAMQPTCPConnection;
 
-    procedure Send(const AFrame: IAMQPFrame);
-    function SendAndWaitReply(const AFrame: IAMQPFrame; const ATimeOut: Cardinal = 0): IAMQPFrame;
-    function Receive(const ATimeOut: Cardinal = 0): IAMQPFrame;
+    procedure Send(const AFrame: TAMQPBasicFrame);
+    function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
+    function Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
   end;
 
 implementation
 
 uses
-  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Fames.ConnectionStart,
-  DelphiAMQP.Constants, DelphiAMQP.Frames.Factory;
+  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Constants, DelphiAMQP.Frames.Factory;
 
 const
   sPROTOCOL_HEADER = 'AMQP';
@@ -55,56 +53,63 @@ begin
   FCon := TIdTCPClient.Create(Self);
 end;
 
-procedure TAMQPIndyConnection.HandleConnectionStart;
+procedure TAMQPIndyConnection.Open;
+begin
+  FCon.Connect;
+  FCon.Socket.Write(sPROTOCOL_HEADER + Chr(0) + Chr(0) + Chr(9) + Chr(1), IndyTextEncoding_ASCII());
+end;
+
+function TAMQPIndyConnection.Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 var
   Response: TIdBytes;
   Header: TAMQPFrameHeader;
   oStream: TBytesStream;
-  oFrame: TAMQPConnectionStartFrame;
+  oFrame: TAMQPBasicFrame;
 begin
-  FCon.ReadTimeout := 1000;
-  FCon.Socket.Write(sPROTOCOL_HEADER + Chr(0) + Chr(0) + Chr(9) + Chr(1), IndyTextEncoding_ASCII());
+  FCon.ReadTimeout := ATimeOut;
   Response := nil;
   FCon.Socket.ReadBytes(Response, 7);
   Header := TAMQPFrameHeader.Create(TBytes(Response));
   try
     oStream := TBytesStream.Create;
     FCon.Socket.ReadStream(oStream, Header.Size);
-    if Header.FrameType <> 1 then
-      raise Exception.Create('Error Message');
-
     oStream.Position := 0;
-    oFrame := TAMQPFrameFactory.BuildFrame(oStream) as TAMQPConnectionStartFrame;
+    oFrame := TAMQPFrameFactory.BuildFrame(oStream);
     oFrame.Read(oStream);
     Response := nil;
     FCon.Socket.ReadBytes(Response, 1);
     if Response[0] <> FRAME_END then
       raise EAMQPBadFrame.CreateFmt('Bad frame received. Expected framend, received %d', [Response[0]]);
+
+    Result := oFrame;
   finally
     Header.Free;
   end;
 end;
 
-procedure TAMQPIndyConnection.Open;
+procedure TAMQPIndyConnection.Send(const AFrame: TAMQPBasicFrame);
+var
+  Stream: TBytesStream;
+  FrameEnd: TBytes;
 begin
-  FCon.Connect;
-  HandleConnectionStart();
+  Stream := TBytesStream.Create();
+  try
+    //TODO: MAKE IT A BETTER WAY
+    SetLength(FrameEnd, 1);
+    FrameEnd[0] := FRAME_END;
+
+    AFrame.Write(Stream);
+    Stream.Write(FrameEnd, 1);
+    FCon.Socket.Write(TIdBytes(Stream.Bytes));
+  finally
+    FreeAndNil(Stream);
+  end;
 end;
 
-function TAMQPIndyConnection.Receive(const ATimeOut: Cardinal): IAMQPFrame;
+function TAMQPIndyConnection.SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 begin
-
-end;
-
-procedure TAMQPIndyConnection.Send(const AFrame: IAMQPFrame);
-begin
-  FCon.Socket.Write(TIdBytes(AFrame.MethodFrame.AsBytes));
-end;
-
-function TAMQPIndyConnection.SendAndWaitReply(const AFrame: IAMQPFrame;
-  const ATimeOut: Cardinal): IAMQPFrame;
-begin
-
+  Send(AFrame);
+  Result := Receive(ATimeOut);
 end;
 
 function TAMQPIndyConnection.SetConnectionString(

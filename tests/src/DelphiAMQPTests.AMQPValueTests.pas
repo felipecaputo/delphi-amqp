@@ -81,12 +81,15 @@ type
     [TestCase('True', 'True,True')]
     [TestCase('False', 'False,False')]
     procedure TestBool(const AValue, Expected: Boolean);
+
+    [Test]
+    procedure TestAmqpTable;
   end;
 
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, System.Classes;
 
 { TDelphiAMQPTests }
 
@@ -98,6 +101,37 @@ end;
 procedure TDelphiAMQPTests.TearDown;
 begin
   FreeAndNil(FAmqpValue);
+end;
+
+procedure TDelphiAMQPTests.TestAmqpTable;
+var
+  Stream: TBytesStream;
+  NewValue: TAMQPValueType;
+begin
+  FAmqpValue.ValueType := TAMQPValueType.FieldTable;
+  FAmqpValue.AsAMQPTable.Add('Test1', TAMQPValueType.Create(TAMQPValueType.ShortString));
+  FAmqpValue.AsAMQPTable.Items['Test1'].AsString := 'Test 3';
+
+  FAmqpValue.AsAMQPTable.Add('Test2', TAMQPValueType.Create(TAMQPValueType.ShortShortUInt));
+  FAmqpValue.AsAMQPTable.Items['Test2'].AsByte := 15;
+
+  NewValue := nil;
+  Stream := TBytesStream.Create();
+  try
+    NewValue := TAMQPValueType.Create(TAMQPValueType.FieldTable);
+
+    FAmqpValue.Write(Stream);
+    Stream.Position := 0;
+    FAmqpValue.Parse(Stream);
+
+    Assert.IsTrue(FAmqpValue.AsAMQPTable.ContainsKey('Test1'));
+    Assert.IsTrue(FAmqpValue.AsAMQPTable.ContainsKey('Test2'));
+
+    Assert.AreEqual(FAmqpValue.AsAMQPTable.Items['Test1'].AsString, 'Test 3');
+    Assert.AreEqual(Integer(FAmqpValue.AsAMQPTable.Items['Test2'].AsByte), 15);
+  finally
+    FreeAndNil(Stream);
+  end;
 end;
 
 procedure TDelphiAMQPTests.TestAsInt8(const AValue: Int8; const Expected: string);

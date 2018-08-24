@@ -3,7 +3,7 @@ unit DelphiAMQP.ConnectionIntf;
 interface
 
 uses
-  DelphiAMQP.FrameIntf, System.SysUtils;
+  DelphiAMQP.Frames.BasicFrame, System.SysUtils;
 
 type
   IAMQPTCPConnection = interface
@@ -12,9 +12,9 @@ type
     procedure Open;
     Procedure Close;
 
-    procedure Send(const AFrame: IAMQPFrame);
-    function SendAndWaitReply(const AFrame: IAMQPFrame; const ATimeOut: Cardinal = 0): IAMQPFrame;
-    function Receive(const ATimeOut: Cardinal = 0): IAMQPFrame;
+    procedure Send(const AFrame: TAMQPBasicFrame);
+    function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
+    function Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 
     function SetHost(const AHost: string): IAMQPTCPConnection;
     function SetPort(const APort: Integer): IAMQPTCPConnection;

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, DelphiAMQP.ConnectionIntf, DelphiAMQP.Connections.Indy,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls, DelphiAMQP.Connections.AMQPConnection;
 
 type
   TForm1 = class(TForm)
@@ -13,7 +13,7 @@ type
     procedure btnConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
-    FAmqpConnection: IAMQPTCPConnection;
+    FAmqpConnection: TAMQPConnection;
   public
     { Public declarations }
   end;
@@ -37,7 +37,7 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  FAmqpConnection := TAMQPIndyConnection.Create(Self);
+  FAmqpConnection := TAMQPConnection.Create(TAMQPIndyConnection.Create(nil));
 end;
 
 end.

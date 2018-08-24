@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{EF92C7CC-C0FD-4C76-B4DF-8452611A5727}</ProjectGuid>
         <MainSource>DelphiAMQP.dpk</MainSource>
-        <ProjectVersion>18.2</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
@@ -118,11 +118,15 @@
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.BasicFrame.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.Header.pas"/>
         <DCCReference Include="src\Util\DelphiAMQP.Util.Helpers.pas"/>
-        <DCCReference Include="src\Frames\DelphiAMQP.Fames.ConnectionStart.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Frames.ConnectionStart.pas"/>
         <DCCReference Include="src\DelphiAMQP.AMQPValue.pas"/>
         <DCCReference Include="src\DelphiAMQP.Constants.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.ConnectionStartOk.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.Factory.pas"/>
+        <DCCReference Include="src\Connections\DelphiAMQP.Connections.AMQPConnection.pas"/>
+        <DCCReference Include="src\Util\DelphiAMQP.Util.Attributes.pas"/>
+        <DCCReference Include="src\DelphiAMQP.AMQPTypes.pas"/>
+        <DCCReference Include="src\Util\DelphiAMQP.Util.Functions.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

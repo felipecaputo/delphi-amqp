@@ -24,20 +24,16 @@ type
 implementation
 
 uses
-  DelphiAMQP.Fames.ConnectionStart,
+  DelphiAMQP.Frames.ConnectionStart,
   DelphiAMQP.Util.Helpers;
 
 { TAMQPFrameFactory }
 
-class function TAMQPFrameFactory.BuildConnectionFrame(const AMethod: Integer):
-    TAMQPBasicFrame;
-var
-  Method: TAMQPConnectionMethods;
+class function TAMQPFrameFactory.BuildConnectionFrame(const AMethod: Integer): TAMQPBasicFrame;
 begin
-  Method := TAMQPConnectionMethods(AMethod);
 
-  case Method of
-    TAMQPConnectionMethods.Start: Result := TAMQPConnectionStartFrame.Create(nil);
+  case AMethod of
+    TAMQPConnectionMethods.Start: Result := TAMQPConnectionStartFrame.Create();
     TAMQPConnectionMethods.StartOk: Result := nil;
     TAMQPConnectionMethods.Secure: Result := nil;
     TAMQPConnectionMethods.SecureOk: Result := nil;
@@ -53,28 +49,28 @@ begin
 end;
 
 class function TAMQPFrameFactory.BuildFrame(const AClass, AMethod: Integer): TAMQPBasicFrame;
-var
-  AMQPClass: TAMQPClasses;
 begin
-  AMQPClass := TAMQPClasses(AClass);
-
-  case AMQPClass of
-    Connection: Result := BuildConnectionFrame(AMethod);
-    Channel: Result := nil;
-    Exchange: Result := nil;
-    Queue: Result := nil;
-    Basic: Result := nil;
-    Transaction: Result := nil;
-    else
-      raise EAMQPFrameFactory.CreateFmt('Unsupported class [%d]', [AClass]);
+  case AClass of
+    TAMQPClasses.Connection: Result := BuildConnectionFrame(AMethod);
+    TAMQPClasses.Channel: Result := nil;
+    TAMQPClasses.Exchange: Result := nil;
+    TAMQPClasses.Queue: Result := nil;
+    TAMQPClasses.Basic: Result := nil;
+    TAMQPClasses.Transaction: Result := nil;
+  else
+    raise EAMQPFrameFactory.CreateFmt('Unsupported class [%d]', [AClass]);
   end;
 
 end;
 
 class function TAMQPFrameFactory.BuildFrame(const APayload: TBytesStream): TAMQPBasicFrame;
+var
+  ClassId, MethodId: Word;
 begin
   APayload.Position := 0;
-  Result := TAMQPFrameFactory.BuildFrame(APayload.AMQPReadShortUInt, APayload.AMQPReadShortUInt);
+  ClassId := APayload.AMQPReadShortUInt;
+  MethodId := APayload.AMQPReadShortUInt;
+  Result := TAMQPFrameFactory.BuildFrame(ClassId, MethodId);
 end;
 
 end.
