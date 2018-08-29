@@ -65,7 +65,7 @@ var
 begin
   oStream := TMemoryStream.Create;
   try
-    Assert(Length(APayload) = 7, 'Invalid frame header size');
+//    Assert(Length(APayload) = 7, 'Invalid frame header size');
     oStream.Size := 7;
     oStream.Write(APayload, 7);
     oStream.Position := 0;

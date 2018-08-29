@@ -3,8 +3,8 @@ unit DelphiAMQP.Frames.BasicFrame;
 interface
 
 uses
-  DelphiAMQP.FrameIntf, System.Classes, System.SysUtils,
-  DelphiAMQP.Frames.Header, System.Rtti;
+  System.Rtti, DelphiAMQP.FrameIntf, System.Classes, System.SysUtils,
+  DelphiAMQP.Frames.Header, DelphiAMQP.AMQPValue;
 
 type
   TAMQPBasicFrame = class(TPersistent)
@@ -16,6 +16,7 @@ type
     FContext: TRttiContext;
     FFrameHeader: TAMQPFrameHeader;
     FContentStream: TBytesStream;
+    FParameters: TArray<TAMQPValueType>;
 
     FMethodId: Word;
     FClassId: Word;
@@ -23,8 +24,6 @@ type
   public
     constructor Create(); virtual;
     destructor Destroy; override;
-
-    function Parameters(): TArray<string>; virtual; abstract;
 
     procedure Read(const AStream: TBytesStream);
     procedure Write(const AStream: TBytesStream);
@@ -36,11 +35,13 @@ type
     property MethodId: Word read FMethodId write FMethodId;
   end;
 
+  TAMQPFrameClass = class of TAMQPBasicFrame;
+
 implementation
 
 uses
-  DelphiAMQP.AMQPValue, DelphiAMQP.Util.Helpers, System.TypInfo,
-  DelphiAMQP.Util.Attributes;
+  DelphiAMQP.Util.Helpers, System.TypInfo, DelphiAMQP.Util.Attributes,
+  System.Generics.Collections;
 
 { TAMQPBasicFrame }
 
@@ -48,20 +49,52 @@ procedure TAMQPBasicFrame.BuildParams;
 var
   prop: TRttiProperty;
   attr: TCustomAttribute;
+  paramAttr: AMQPParamAttribute;
+  value: TAMQPValueType;
+  data: TDictionary<Integer,TAMQPValueType>;
+  I: Integer;
 begin
-  for prop in FContext.GetType(Self.ClassType).GetProperties do
-  begin
-
-    for attr in prop.GetAttributes do
+  data := TDictionary<Integer, TAMQPValueType>.Create;
+  try
+    for prop in FContext.GetType(Self.ClassType).GetProperties do
     begin
-      if not (attr is AMQPParamAttribute) then
-        Continue;
 
-      if prop.GetValue(Self).AsObject = nil then
-        prop.SetValue(Self, TValue.From<TAMQPValueType>(TAMQPValueType.Create((attr as AMQPParamAttribute).DataType)))
-      else
-        (prop.GetValue(Self).AsObject as TAMQPValueType).ValueType := (attr as AMQPParamAttribute).DataType;
+      for attr in prop.GetAttributes do
+      begin
+        if not (attr is AMQPParamAttribute) then
+          Continue;
+
+        paramAttr := attr as AMQPParamAttribute;
+
+        value := prop.GetValue(Self).AsObject as TAMQPValueType;
+        if value = nil then
+        begin
+          value := TAMQPValueType.Create(paramAttr.DataType);
+          try
+            prop.SetValue(Self, TValue.From<TAMQPValueType>(value));
+          except
+            FreeAndNil(value);
+            raise;
+          end;
+        end
+        else
+          value.ValueType := paramAttr.DataType;
+
+        Data.Add(paramAttr.Order, value);
+      end;
     end;
+
+    SetLength(FParameters, Data.Count);
+    for I := 0 to Pred(Data.Count) do
+    begin
+      if not Data.ContainsKey(I) then
+        raise EAMQPParserException.CreateFmt('Missing parameter %d for frame %s',
+          [I, Self.ClassName]);
+
+      FParameters[I] := Data.Items[I];
+    end;
+  finally
+    FreeAndNil(data);
   end;
 end;
 
@@ -124,74 +157,33 @@ end;
 
 procedure TAMQPBasicFrame.Read(const AStream: TBytesStream);
 var
-  methodParameters: TArray<string>;
-  parameter: string;
-  context: TRttiContext;
-  objType: TRttiType;
-  objProp: TRttiProperty;
-  prop: TAMQPValueType;
+  param: TAMQPValueType;
 begin
-  methodParameters := Self.Parameters;
-  context := TRttiContext.Create;
-  try
-    objType := context.GetType(Self.ClassType);
-    for parameter in methodParameters do
-    begin
-      objProp := objType.GetProperty(parameter);
-
-      if objProp = nil then
-        raise EAMQPParserException.CreateFmt('Property not found [%s]', [parameter]);
-
-      prop := (objProp.GetValue(Self).AsObject as TAMQPValueType);
-      prop.Parse(prop.ValueType, AStream);
-    end;
-  finally
-    context.Free;
-  end;
+  for param in FParameters do
+    param.Parse(AStream);
 end;
 
 procedure TAMQPBasicFrame.Write(const AStream: TBytesStream);
 var
-  methodParameters: TArray<string>;
-  parameter: string;
-  context: TRttiContext;
-  objType: TRttiType;
-  objProp: TRttiProperty;
-  prop: TAMQPValueType;
+  param: TAMQPValueType;
   TempStream: TBytesStream;
-  Test: TBytes;
+  methodInfo: TBytes;
 begin
-  //TODO: Try to unify this and Read
-  TempStream := nil;
-  context := TRttiContext.Create;
+  TempStream := TBytesStream.Create();
   try
-    TempStream := TBytesStream.Create();
+    SetLength(methodInfo, 4);
+    AMQPMoveEx(FClassId, methodInfo, 0, 2);
+    AMQPMoveEx(MethodId, methodInfo, 2, 2);
+    TempStream.Write(methodInfo, 4);
 
-    SetLength(Test, 4);
-    AMQPMoveEx(FClassId, Test, 0, 2);
-    AMQPMoveEx(MethodId, Test, 2, 2);
-    TempStream.Write(Test, 4);
-
-    methodParameters := Parameters();
-
-    objType := context.GetType(Self.ClassType);
-    for parameter in methodParameters do
-    begin
-      objProp := objType.GetProperty(parameter);
-
-      if objProp = nil then
-        raise EAMQPParserException.CreateFmt('Property not found [%s]', [parameter]);
-
-      prop := (objProp.GetValue(Self).AsObject as TAMQPValueType);
-      prop.Write(TempStream);
-    end;
+    for param in FParameters do
+      param.Write(TempStream);
 
     FrameHeader.Size := TempStream.Size;
     FrameHeader.Write(AStream);
     TempStream.Position := 0;
     AStream.Write(TempStream.Bytes, TempStream.Size);
   finally
-    context.Free;
     FreeAndNil(TempStream);
   end;
 end;

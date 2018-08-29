@@ -393,7 +393,7 @@ begin
 
   SetLength(FValue, 4 + stringSize);
   AMQPMoveEx(stringSize, FValue, 0, SizeOf(UInt32));
-  Move(TEncoding.ANSI.GetBytes(AValue)[0], FValue[4], stringSize);
+  Move(TEncoding.UTF8.GetBytes(AValue)[0], FValue[4], stringSize);
 end;
 
 function TAMQPValueType.GetAsWord: Word;

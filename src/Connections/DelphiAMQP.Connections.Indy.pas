@@ -61,25 +61,25 @@ end;
 
 function TAMQPIndyConnection.Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 var
-  Response: TIdBytes;
+  frameEndByte: Byte;
   Header: TAMQPFrameHeader;
   oStream: TBytesStream;
   oFrame: TAMQPBasicFrame;
 begin
   FCon.ReadTimeout := ATimeOut;
-  Response := nil;
-  FCon.Socket.ReadBytes(Response, 7);
-  Header := TAMQPFrameHeader.Create(TBytes(Response));
+  oStream := TBytesStream.Create;
   try
-    oStream := TBytesStream.Create;
-    FCon.Socket.ReadStream(oStream, Header.Size);
+    FCon.Socket.ReadStream(oStream, 7);
+    Header := TAMQPFrameHeader.Create(oStream.Bytes);
+    oStream.Clear();
+    FCon.Socket.ReadStream(oStream, Header.Size + 1);
     oStream.Position := 0;
     oFrame := TAMQPFrameFactory.BuildFrame(oStream);
     oFrame.Read(oStream);
-    Response := nil;
-    FCon.Socket.ReadBytes(Response, 1);
-    if Response[0] <> FRAME_END then
-      raise EAMQPBadFrame.CreateFmt('Bad frame received. Expected framend, received %d', [Response[0]]);
+    oStream.Read(frameEndByte, 1);
+
+    if frameEndByte <> FRAME_END then
+      raise EAMQPBadFrame.CreateFmt('Bad frame received. Expected framend, received %d', [frameEndByte]);
 
     Result := oFrame;
   finally
@@ -100,7 +100,8 @@ begin
 
     AFrame.Write(Stream);
     Stream.Write(FrameEnd, 1);
-    FCon.Socket.Write(TIdBytes(Stream.Bytes));
+    Stream.Position := 0;
+    FCon.Socket.Write(Stream, Stream.Size);
   finally
     FreeAndNil(Stream);
   end;

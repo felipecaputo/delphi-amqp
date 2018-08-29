@@ -15,8 +15,6 @@ type
     FServerProperties: TAMQPValueType;
     FMecanisms: TAMQPValueType;
     FLocales: TAMQPValueType;
-  public
-    function Parameters(): TArray<string>; override;
   published
     [AMQPParamAttribute(0, TAMQPValueType.ShortShortUInt)]
     property VersionMajor: TAMQPValueType read FVersionMajor write FVersionMajor;
@@ -32,18 +30,5 @@ type
   end;
 
 implementation
-
-uses
-  DelphiAMQP.Util.Helpers, System.SysUtils;
-
-function TAMQPConnectionStartFrame.Parameters: TArray<string>;
-begin
-  SetLength(Result, 5);
-  Result[0] := 'VersionMajor';
-  Result[1] := 'VersionMinor';
-  Result[2] := 'ServerProperties';
-  Result[3] := 'Mecanisms';
-  Result[4] := 'Locales';
-end;
 
 end.

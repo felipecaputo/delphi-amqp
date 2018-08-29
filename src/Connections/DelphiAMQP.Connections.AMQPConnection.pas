@@ -4,7 +4,8 @@ interface
 
 uses
   DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.ConnectionStart,
-  DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue;
+  DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue, DelphiAMQP.Frames.ConnectionTune,
+  DelphiAMQP.Frames.ConnectionOpen;
 
 type
   TAMQPConnection = class
@@ -20,9 +21,11 @@ type
     FReadTimeOut: Integer;
 
     procedure ReplyConnectionStart(const AStartFrame: TAMQPConnectionStartFrame);
+    procedure ReplyConnectionTune(const ATuneFrame: TAMQPConnectionTuneFrame);
+    procedure DoOpenConnection();
     procedure HandleConnectionStart();
 
-    function BuildShortStringAqmpField(const AValue: string): TAMQPValueType;
+    function BuildLongStringAMQPField(const AValue: string): TAMQPValueType;
   public
     constructor Create(const AConnection: IAMQPTCPConnection);
 
@@ -47,7 +50,7 @@ uses
 
 { TAMQPConnection }
 
-function TAMQPConnection.BuildShortStringAqmpField(const AValue: string): TAMQPValueType;
+function TAMQPConnection.BuildLongStringAMQPField(const AValue: string): TAMQPValueType;
 begin
   Result := TAMQPValueType.Create(TAMQPValueType.LongString);
   try
@@ -62,6 +65,27 @@ constructor TAMQPConnection.Create(const AConnection: IAMQPTCPConnection);
 begin
   FCon := AConnection;
   FReadTimeOut := 5000;
+  FVirtualHost := '/';
+end;
+
+procedure TAMQPConnection.DoOpenConnection;
+var
+  openCon: TAMQPConnectionOpenFrame;
+  reply: TAMQPBasicFrame;
+begin
+  openCon := TAMQPConnectionOpenFrame.Create;
+  try
+    openCon.VHost.AsString := FVirtualHost;
+    openCon.Reserved1.AsString := '';
+    openCon.Reserved2.AsBoolean := False;
+
+    FCon.Send(openCon);
+    reply := FCon.Receive(FReadTimeOut);
+    if not (reply is TAMQPConnectionOpenOkFrame) then
+      raise Exception.Create('Error Message');
+  finally
+    FreeAndNil(openCon);
+  end;
 end;
 
 procedure TAMQPConnection.HandleConnectionStart;
@@ -72,6 +96,8 @@ begin
   oFrame := FCon.Receive(FReadTimeOut) as TAMQPConnectionStartFrame;
   ReplyConnectionStart(oFrame);
   Frame := FCon.Receive(FReadTimeOut);
+  ReplyConnectionTune(Frame as TAMQPConnectionTuneFrame);
+  DoOpenConnection();
 end;
 
 procedure TAMQPConnection.Open;
@@ -86,12 +112,12 @@ var
 begin
   Reply := TAMQPConnectionStartOkFrame.Create;
   try
-    Reply.ClientProperties.AsAMQPTable.Add('product', BuildShortStringAqmpField('delphi-amqp'));
-    Reply.ClientProperties.AsAMQPTable.Add('version', BuildShortStringAqmpField('DELPHI_AMQP_VERSION'));
+    Reply.ClientProperties.AsAMQPTable.Add('product', BuildLongStringAMQPField('delphi-amqp'));
+    Reply.ClientProperties.AsAMQPTable.Add('version', BuildLongStringAMQPField('DELPHI_AMQP_VERSION'));
     {$IFDEF LINUX64}
-    Reply.ClientProperties.AsAMQPTable.Add('platform', BuildShortStringAqmpField('linux'));
+    Reply.ClientProperties.AsAMQPTable.Add('platform', BuildLongStringAMQPField('linux'));
     {$ELSE}
-    Reply.ClientProperties.AsAMQPTable.Add('platform', BuildShortStringAqmpField('windows'));
+    Reply.ClientProperties.AsAMQPTable.Add('platform', BuildLongStringAMQPField('windows'));
     {$ENDIF}
 
 
@@ -101,6 +127,22 @@ begin
     FCon.Send(Reply);
   finally
     FreeAndNil(Reply);
+  end;
+end;
+
+procedure TAMQPConnection.ReplyConnectionTune(const ATuneFrame: TAMQPConnectionTuneFrame);
+var
+  tuneOk: TAMQPConnectionTuneOkFrame;
+begin
+  tuneOk := TAMQPConnectionTuneOkFrame.Create;
+  try
+    tuneOk.ChannelMax.AsWord := ATuneFrame.ChannelMax.AsWord;
+    tuneOk.FrameMax.AsInt32 := ATuneFrame.FrameMax.AsInt32;
+    tuneOk.HeartBeat.AsWord := ATuneFrame.HeartBeat.AsWord;
+
+    FCon.Send(tuneOk);
+  finally
+    FreeAndNil(tuneOk);
   end;
 end;
 

@@ -14,8 +14,6 @@ type
     FMechanism: TAMQPValueType;
     FResponse: TAMQPValueType;
     FLocale: TAMQPValueType;
-  public
-    function Parameters(): TArray<string>; override;
   published
     [AMQPParamAttribute(0, TAMQPValueType.FieldTable)]
     property ClientProperties: TAMQPValueType read FClientProperties write FClientProperties;
@@ -28,17 +26,5 @@ type
   end;
 
 implementation
-
-uses
-  System.SysUtils;
-
-function TAMQPConnectionStartOkFrame.Parameters: TArray<string>;
-begin
-  SetLength(Result, 4);
-  Result[0] := 'ClientProperties';
-  Result[1] := 'Mechanism';
-  Result[2] := 'Response';
-  Result[3] := 'Locale';
-end;
 
 end.

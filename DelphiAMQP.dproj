@@ -127,6 +127,8 @@
         <DCCReference Include="src\Util\DelphiAMQP.Util.Attributes.pas"/>
         <DCCReference Include="src\DelphiAMQP.AMQPTypes.pas"/>
         <DCCReference Include="src\Util\DelphiAMQP.Util.Functions.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Frames.ConnectionTune.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Frames.ConnectionOpen.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
