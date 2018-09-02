@@ -8,7 +8,7 @@ uses
   System.Rtti,
   System.SysUtils,
   DelphiAMQP.Constants,
-  DelphiAMQP.Frames.BasicFrame, DelphiAMQP.Frames.ConnectionStart;
+  DelphiAMQP.Frames.BasicFrame, DelphiAMQP.Frames.Connection;
 
 type
   EAMQPFrameFactory = class(Exception);
@@ -31,9 +31,7 @@ type
 implementation
 
 uses
-  DelphiAMQP.Util.Helpers, DelphiAMQP.Util.Attributes,
-  DelphiAMQP.Frames.ConnectionStartOk, DelphiAMQP.Frames.ConnectionTune,
-  DelphiAMQP.Frames.ConnectionOpen;
+  DelphiAMQP.Util.Helpers, DelphiAMQP.Util.Attributes;
 
 { TAMQPFrameFactory }
 
@@ -92,13 +90,6 @@ end;
 initialization
   TAMQPFrameFactory.FSupportedFrames := nil;
   TAMQPFrameFactory.FContext := TRttiContext.Create();
-  //Registro dos frames de comunicação
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionStartFrame);
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionStartOkFrame);
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionTuneFrame);
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionTuneOKFrame);
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionOpenFrame);
-  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionOpenOkFrame);
 
 finalization
   FreeAndNil(TAMQPFrameFactory.FSupportedFrames);

@@ -66,6 +66,7 @@ var
   oStream: TBytesStream;
   oFrame: TAMQPBasicFrame;
 begin
+  Header := nil;
   FCon.ReadTimeout := ATimeOut;
   oStream := TBytesStream.Create;
   try

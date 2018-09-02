@@ -3,17 +3,13 @@ unit DelphiAMQP.Connections.AMQPConnection;
 interface
 
 uses
-  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.ConnectionStart,
-  DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue, DelphiAMQP.Frames.ConnectionTune,
-  DelphiAMQP.Frames.ConnectionOpen;
+  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Connection, DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue;
 
 type
   TAMQPConnection = class
   private
     FCon: IAMQPTCPConnection;
-    FPort: Integer;
     FPassword: string;
-    FHost: string;
     FUser: string;
     FVirtualHost: string;
 
@@ -44,7 +40,7 @@ type
 implementation
 
 uses
-  DelphiAMQP.Frames.ConnectionStartOk, System.SysUtils,
+  System.SysUtils,
   DelphiAMQP.Util.Functions, DelphiAMQP.Constants,
   DelphiAMQP.Frames.BasicFrame;
 
