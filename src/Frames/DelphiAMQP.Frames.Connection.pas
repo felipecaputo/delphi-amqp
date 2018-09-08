@@ -4,7 +4,7 @@ interface
 
 uses
   DelphiAMQP.Frames.BasicFrame, DelphiAMQP.Util.Attributes,
-  DelphiAMQP.Constants, DelphiAMQP.AMQPValue;
+  DelphiAMQP.Constants, DelphiAMQP.AMQPValue, DelphiAMQP.Frames.Factory;
 
 type
   [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.Start)]
@@ -46,6 +46,23 @@ type
     property Response: TAMQPValueType read FResponse write FResponse;
     [AMQPParamAttribute(3, TAMQPValueType.ShortString)]
     property Locale: TAMQPValueType read FLocale write FLocale;
+  end;
+
+  [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.Secure)]
+  TAMQPConnectionSecureFrame = class(TAMQPBasicFrame)
+  private
+    FChallenge: TAMQPValueType;
+  published
+    [AMQPParam(0, TAMQPValueType.LongString)]
+    property Challenge: TAMQPValueType read FChallenge write FChallenge;
+  end;
+
+  [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.SecureOk)]
+  TAMQPConnectionSecureOkFrame = class(TAMQPBasicFrame)
+  private
+    FResponse: TAMQPValueType;
+  published
+    property Response: TAMQPValueType read FResponse write FResponse;
   end;
 
   [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.Tune)]
@@ -104,17 +121,43 @@ type
     property Reserved1: TAMQPValueType read FReserved1 write FReserved1;
   end;
 
-implementation
+  [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.Close)]
+  TAMQPConnectionCloseFrame = class(TAMQPBasicFrame)
+  private
+    FReplyCode: TAMQPValueType;
+    FReplyText: TAMQPValueType;
+    FClassId: TAMQPValueType;
+    FMethodId: TAMQPValueType;
+  published
+    [AMQPParam(0, TAMQPValueType.ShortInt)]
+    property ReplyCode: TAMQPValueType read FReplyCode write FReplyCode;
+    [AMQPParam(1, TAMQPValueType.ShortString)]
+    property ReplyText: TAMQPValueType read FReplyText write FReplyText;
+    [AMQPParam(2, TAMQPValueType.ShortInt)]
+    property ClassId: TAMQPValueType read FClassId write FClassId;
+    [AMQPParam(3, TAMQPValueType.ShortInt)]
+    property MethodId: TAMQPValueType read FMethodId write FMethodId;
+  end;
 
-uses
-  DelphiAMQP.Frames.Factory;
+  [AMQPFrame(TAMQPClasses.Connection, TAMQPConnectionMethods.CloseOk)]
+  TAMQPConnectionCloseOkFrame = class(TAMQPBasicFrame)
+
+  end;
+
+
+
+implementation
 
 initialization
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionStartFrame);
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionStartOkFrame);
+  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionSecureFrame);
+  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionSecureOkFrame);
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionTuneFrame);
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionTuneOKFrame);
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionOpenFrame);
   TAMQPFrameFactory.RegisterFrame(TAMQPConnectionOpenOkFrame);
+  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionCloseFrame);
+  TAMQPFrameFactory.RegisterFrame(TAMQPConnectionCloseOkFrame);
 
 end.

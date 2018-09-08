@@ -8,7 +8,7 @@ uses
   System.Rtti,
   System.SysUtils,
   DelphiAMQP.Constants,
-  DelphiAMQP.Frames.BasicFrame, DelphiAMQP.Frames.Connection;
+  DelphiAMQP.Frames.BasicFrame;
 
 type
   EAMQPFrameFactory = class(Exception);

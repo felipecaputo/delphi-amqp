@@ -23,4 +23,13 @@ object Form1: TForm1
     TabOrder = 0
     OnClick = btnConnectClick
   end
+  object btnClose: TButton
+    Left = 496
+    Top = 48
+    Width = 119
+    Height = 25
+    Caption = 'btnClose'
+    TabOrder = 1
+    OnClick = btnCloseClick
+  end
 end

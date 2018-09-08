@@ -26,6 +26,7 @@ type
     constructor Create(const AConnection: IAMQPTCPConnection);
 
     procedure Open;
+    procedure Close;
 
     function SetHost(const AHost: string): TAMQPConnection;
     function SetPort(const APort: Integer): TAMQPConnection;
@@ -54,6 +55,35 @@ begin
   except
     FreeAndNil(Result);
     raise;
+  end;
+end;
+
+procedure TAMQPConnection.Close;
+var
+  closeFrame: TAMQPConnectionCloseFrame;
+  closeOkFrame: TAMQPConnectionCloseOkFrame;
+  response: TAMQPBasicFrame;
+begin
+  response := nil;
+  closeOkFrame := nil;
+  closeFrame := TAMQPConnectionCloseFrame.Create;
+  try
+    FCon.Send(closeFrame);
+    response := FCon.Receive(FReadTimeOut);
+
+    if response is TAMQPConnectionCloseFrame then
+    begin
+      closeOkFrame := TAMQPConnectionCloseOkFrame.Create;
+      FCon.Send(closeOkFrame);
+      FCon.Close;
+    end;
+
+    if response is TAMQPConnectionCloseOkFrame then
+      FCon.Close;
+  finally
+    FreeAndNil(closeFrame);
+    FreeAndNil(closeOkFrame);
+    FreeAndNil(response);
   end;
 end;
 

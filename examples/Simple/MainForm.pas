@@ -10,8 +10,10 @@ uses
 type
   TForm1 = class(TForm)
     btnConnect: TButton;
+    btnClose: TButton;
     procedure btnConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
   private
     FAmqpConnection: TAMQPConnection;
   public
@@ -24,6 +26,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TForm1.btnCloseClick(Sender: TObject);
+begin
+  FAmqpConnection.Close();
+end;
 
 procedure TForm1.btnConnectClick(Sender: TObject);
 begin
