@@ -29,6 +29,17 @@ type
       CloseOk = 51;
   end;
 
+  TAMQPChannelMethods = class
+    public
+      const
+        Open = 10;
+        OpenOk = 11;
+        Flow = 20;
+        FlowOk = 21;
+        Close = 40;
+        CloseOk = 41;
+  end;
+
 
 const
   DELPHI_AMQP_VERSION = '1.0.0';

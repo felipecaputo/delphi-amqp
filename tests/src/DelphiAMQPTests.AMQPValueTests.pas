@@ -84,6 +84,15 @@ type
 
     [Test]
     procedure TestAmqpTable;
+
+    [Test]
+    [TestCase('True Bit1', 'True,True,1')]
+    [TestCase('False Bit1', 'False,False,1')]
+    [TestCase('True Bit0', 'True,True,0')]
+    [TestCase('False Bit0', 'False,False,0')]
+    [TestCase('True Bit7', 'True,True,7')]
+    [TestCase('False Bit7', 'False,False,7')]
+    procedure TestBit(const AValue, Expected: Boolean; const Offset: Byte);
   end;
 
 implementation
@@ -122,15 +131,16 @@ begin
 
     FAmqpValue.Write(Stream);
     Stream.Position := 0;
-    FAmqpValue.Parse(Stream);
+    NewValue.Parse(Stream);
 
-    Assert.IsTrue(FAmqpValue.AsAMQPTable.ContainsKey('Test1'));
-    Assert.IsTrue(FAmqpValue.AsAMQPTable.ContainsKey('Test2'));
+    Assert.IsTrue(NewValue.AsAMQPTable.ContainsKey('Test1'));
+    Assert.IsTrue(NewValue.AsAMQPTable.ContainsKey('Test2'));
 
-    Assert.AreEqual(FAmqpValue.AsAMQPTable.Items['Test1'].AsString, 'Test 3');
-    Assert.AreEqual(Integer(FAmqpValue.AsAMQPTable.Items['Test2'].AsByte), 15);
+    Assert.AreEqual(NewValue.AsAMQPTable.Items['Test1'].AsString, 'Test 3');
+    Assert.AreEqual(Integer(NewValue.AsAMQPTable.Items['Test2'].AsByte), 15);
   finally
     FreeAndNil(Stream);
+    FreeAndNil(NewValue);
   end;
 end;
 
@@ -139,6 +149,15 @@ begin
   FAmqpValue.ValueType := TAMQPValueType.ShortShortInt;
   FAmqpValue.AsInt8 := AValue;
   Assert.AreEqual(IntToStr(FAmqpValue.AsInt8), Expected);
+end;
+
+procedure TDelphiAMQPTests.TestBit(const AValue, Expected: Boolean; const Offset: Byte);
+begin
+  FAmqpValue.ValueType := TAMQPValueType.Bit;
+  FAmqpValue.BitOffset := Offset;
+  FAmqpValue.AsBoolean := AValue;
+  Assert.AreEqual(Expected, FAmqpValue.AsBoolean);
+  Assert.AreEqual(Length(FAmqpValue.Data), 1);
 end;
 
 procedure TDelphiAMQPTests.TestBool(const AValue, Expected: Boolean);

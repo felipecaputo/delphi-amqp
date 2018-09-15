@@ -100,6 +100,7 @@
         <DCCReference Include="src\DelphiAMQP.AMQPTypes.pas"/>
         <DCCReference Include="src\Util\DelphiAMQP.Util.Functions.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.Connection.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Frames.Channel.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -146,7 +147,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\DelphiAMQP.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\DelphiAMQP.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiAMQP.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

@@ -18,11 +18,13 @@ type
   private
     FOrder: UInt8;
     FDataType: Char;
+    FBitOffset: UInt8;
   public
-    constructor Create(const AOrder: UInt8; const ADataType: Char);
+    constructor Create(const AOrder: UInt8; const ADataType: Char; const ABitOffset: UInt8 = 0);
 
     property Order: UInt8 read FOrder write FOrder;
     property DataType: Char read FDataType write FDatatype;
+    property BitOffset: UInt8 read FBitOffset write FBitOffset;
   end;
 
 implementation
@@ -37,10 +39,11 @@ end;
 
 { AMQPParamAttribute }
 
-constructor AMQPParamAttribute.Create(const AOrder: UInt8; const ADataType: Char);
+constructor AMQPParamAttribute.Create(const AOrder: UInt8; const ADataType: Char; const ABitOffset: UInt8 = 0);
 begin
   FOrder := AOrder;
   FDataType := ADataType;
+  FBitOffset := ABitOffset;
 end;
 
 end.

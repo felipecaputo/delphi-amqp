@@ -8,6 +8,7 @@ uses
 type
   EAMQPParserException = class(Exception);
 
+
   TAMQPValueType = class
   private
     FValueType: Char;
@@ -15,6 +16,7 @@ type
     FAMQPTable: TObjectDictionary<string, TAMQPValueType>;
     FFieldArray: TList<TAMQPValueType>;
     FFloatPrecision: Byte;
+    FBitOffset: Byte;
 
     procedure GetScalarValue(var Dest; const Size: Integer);
     procedure SetScalarValue(const Source; const Size: Integer);
@@ -26,6 +28,7 @@ type
     procedure ParseAMQPFieldValuePair(const AStream: TBytesStream);
     procedure ParseByteArray(const AStream: TBytesStream);
     procedure ParseFieldArray(const AStream: TBytesStream);
+    procedure ParseBit(const AStream: TBytesStream);
 
     function GetAsString: string;
     procedure SetAsString(const AValue: string);
@@ -54,6 +57,7 @@ type
     procedure PreprareFieldTable();
   public
     const
+      Bit = '1';
       Bool = 't';
       ShortShortInt = 'b';
       ShortShortUInt = 'B';
@@ -84,6 +88,7 @@ type
     property ValueType: Char read FValueType write FValueType;
     property FloatPrecision: Byte read FFloatPrecision write FFloatPrecision;
     property Data: TBytes read FValue;
+    property BitOffset: Byte read FBitOffset write FBitOffset;
 
     //Get typed values
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
@@ -115,7 +120,15 @@ begin
 end;
 
 function TAMQPValueType.GetAsBoolean: Boolean;
+var
+  Mask: Byte;
 begin
+  if FValueType = TAMQPValueType.Bit then
+  begin
+    Mask := (1 shl (7 -  FBitOffset));
+    Exit(FValue[0] and Mask <> 0);
+  end;
+
   Result := FValue[0] <> 0;
 end;
 
@@ -168,6 +181,7 @@ end;
 procedure TAMQPValueType.Parse(const AType: Char; const AStream: TBytesStream);
 begin
   case AType of
+    TAMQPValueType.Bit: ParseBit(AStream);
     TAMQPValueType.Bool, TAMQPValueType.ShortShortInt, TAMQPValueType.ShortShortUInt: ReadValue(AStream, 1);
     TAMQPValueType.ShortInt, TAMQPValueType.ShortUInt: ReadValue(AStream, 2);
     TAMQPValueType.LongInt, TAMQPValueType.Float, TAMQPValueType.LongUInt: ReadValue(AStream, 4);
@@ -213,6 +227,14 @@ begin
     ParseAMQPFieldValuePair(AStream);
 end;
 
+procedure TAMQPValueType.ParseBit(const AStream: TBytesStream);
+begin
+  if FBitOffset <> 0 then
+    AStream.Position := Pred(AStream.Position);
+
+  ReadValue(AStream, 1);
+end;
+
 procedure TAMQPValueType.ParseByteArray(const AStream: TBytesStream);
 var
   size: Int32;
@@ -233,6 +255,7 @@ var
   Size: Cardinal;
 begin
   Size := AStream.AMQPReadLongUInt;
+  AStream.Position := AStream.Position - SizeOf(LongUInt);
   ReadValue(AStream, Size);
 end;
 
@@ -244,7 +267,8 @@ begin
   if AStream.Read(stringSize, 1) <> 1 then
     raise EAMQPParserException.Create(sINVALID_STREAM);
 
-  ReadValue(AStream, stringSize[0]);
+  AStream.Position := Pred(AStream.Position);
+  ReadValue(AStream, stringSize[0] + 1);
 end;
 
 procedure TAMQPValueType.PrepareData;
@@ -294,6 +318,13 @@ end;
 procedure TAMQPValueType.SetAsBoolean(const Value: Boolean);
 begin
   SetLength(FValue, 1);
+
+  if FValueType = TAMQPValueType.Bit then
+  begin
+    FValue[0] := (IfThen(Value, 1, 0) shl (7 - FBitOffset));
+    Exit;
+  end;
+
   FValue[0] := IfThen(Value, 1, 0);
 end;
 
@@ -393,7 +424,7 @@ begin
 
   SetLength(FValue, 4 + stringSize);
   AMQPMoveEx(stringSize, FValue, 0, SizeOf(UInt32));
-  Move(TEncoding.UTF8.GetBytes(AValue)[0], FValue[4], stringSize);
+  Move(TEncoding.Ansi.GetBytes(AValue)[0], FValue[4], stringSize);
 end;
 
 function TAMQPValueType.GetAsWord: Word;

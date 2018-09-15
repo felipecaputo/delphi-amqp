@@ -47,6 +47,7 @@ contains
   DelphiAMQP.Util.Attributes in 'src\Util\DelphiAMQP.Util.Attributes.pas',
   DelphiAMQP.AMQPTypes in 'src\DelphiAMQP.AMQPTypes.pas',
   DelphiAMQP.Util.Functions in 'src\Util\DelphiAMQP.Util.Functions.pas',
-  DelphiAMQP.Frames.Connection in 'src\Frames\DelphiAMQP.Frames.Connection.pas';
+  DelphiAMQP.Frames.Connection in 'src\Frames\DelphiAMQP.Frames.Connection.pas',
+  DelphiAMQP.Frames.Channel in 'src\Frames\DelphiAMQP.Frames.Channel.pas';
 
 end.
