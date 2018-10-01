@@ -32,4 +32,22 @@ object Form1: TForm1
     TabOrder = 1
     OnClick = btnCloseClick
   end
+  object btnOpenChannel: TButton
+    Left = 200
+    Top = 32
+    Width = 129
+    Height = 25
+    Caption = 'Open Channel'
+    TabOrder = 2
+    OnClick = btnOpenChannelClick
+  end
+  object btnCloseChannel: TButton
+    Left = 200
+    Top = 63
+    Width = 129
+    Height = 25
+    Caption = 'Close Channel'
+    TabOrder = 3
+    OnClick = btnCloseChannelClick
+  end
 end

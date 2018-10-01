@@ -23,6 +23,7 @@ type
     class var FSupportedFrames: TDictionary<Integer, TAMQPFrameClass>;
   public
     class procedure RegisterFrame(const AFrameClass: TAMQPFrameClass);
+    class procedure RegisterFrames(const AFramesClasses: TArray<TAMQPFrameClass>);
 
     class function BuildFrame(const AClass, AMethod: Integer): TAMQPBasicFrame; overload;
     class function BuildFrame(const APayload: TBytesStream): TAMQPBasicFrame; overload;
@@ -85,6 +86,14 @@ begin
     TAMQPFrameFactory.FSupportedFrames := TDictionary<Integer,TAMQPFrameClass>.Create();
 
   TAMQPFrameFactory.FSupportedFrames.AddOrSetValue(GetFrameId(AFrameClass), AFrameClass);
+end;
+
+class procedure TAMQPFrameFactory.RegisterFrames(const AFramesClasses: TArray<TAMQPFrameClass>);
+var
+  frameClass: TAMQPFrameClass;
+begin
+  for frameClass in AFramesClasses do
+    TAMQPFrameFactory.RegisterFrame(frameClass);
 end;
 
 initialization

@@ -3,7 +3,8 @@ unit DelphiAMQP.Connections.AMQPConnection;
 interface
 
 uses
-  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Connection, DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue;
+  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Connection, DelphiAMQP.AMQPTypes, DelphiAMQP.AMQPValue,
+  DelphiAMQP.Channel, System.Generics.Collections;
 
 type
   TAMQPConnection = class
@@ -15,6 +16,7 @@ type
 
   private
     FReadTimeOut: Integer;
+    FChannels: TObjectDictionary<Integer, TAMQPChannel>;
 
     procedure ReplyConnectionStart(const AStartFrame: TAMQPConnectionStartFrame);
     procedure ReplyConnectionTune(const ATuneFrame: TAMQPConnectionTuneFrame);
@@ -22,11 +24,18 @@ type
     procedure HandleConnectionStart();
 
     function BuildLongStringAMQPField(const AValue: string): TAMQPValueType;
+    procedure SetReadTimeOut(const Value: Integer);
+
+    function GetNewChannelId: UInt16;
+    function DoOpenChannel(const AChannelId: UInt16): TAMQPChannel;
   public
     constructor Create(const AConnection: IAMQPTCPConnection);
+    destructor Destroy; override;
 
     procedure Open;
     procedure Close;
+
+    function OpenChannel(const ChannelId: UInt16 = 0): TAMQPChannel;
 
     function SetHost(const AHost: string): TAMQPConnection;
     function SetPort(const APort: Integer): TAMQPConnection;
@@ -35,7 +44,8 @@ type
     function SetPassword(const APassword: string): TAMQPConnection;
 
     property TCPConnection: IAMQPTCPConnection read FCon;
-    property ReadTimeOut: Integer read FReadTimeOut write FReadTimeOut;
+    property ReadTimeOut: Integer read FReadTimeOut write SetReadTimeOut;
+    property Channels: TObjectDictionary<Integer, TAMQPChannel> read FChannels write FChannels;
   end;
 
 implementation
@@ -68,17 +78,15 @@ begin
   closeOkFrame := nil;
   closeFrame := TAMQPConnectionCloseFrame.Create;
   try
-    FCon.Send(closeFrame);
-    response := FCon.Receive(FReadTimeOut);
+    response := FCon.SendAndWaitReply(closeFrame, FReadTimeOut);
 
     if response is TAMQPConnectionCloseFrame then
     begin
       closeOkFrame := TAMQPConnectionCloseOkFrame.Create;
       FCon.Send(closeOkFrame);
       FCon.Close;
-    end;
-
-    if response is TAMQPConnectionCloseOkFrame then
+    end
+    else if response is TAMQPConnectionCloseOkFrame then
       FCon.Close;
   finally
     FreeAndNil(closeFrame);
@@ -90,8 +98,38 @@ end;
 constructor TAMQPConnection.Create(const AConnection: IAMQPTCPConnection);
 begin
   FCon := AConnection;
+  FChannels := TObjectDictionary<Integer, TAMQPChannel>.Create;
+
   FReadTimeOut := 5000;
   FVirtualHost := '/';
+end;
+
+destructor TAMQPConnection.Destroy;
+begin
+  FreeAndNil(FChannels);
+  inherited;
+end;
+
+function TAMQPConnection.DoOpenChannel(const AChannelId: UInt16): TAMQPChannel;
+var
+  newChannel: TAMQPChannel;
+  channelId: UInt16;
+begin
+  if AChannelId = 0 then
+    channelId := GetNewChannelId()
+  else
+    channelId := AChannelId;
+
+  newChannel := TAMQPChannel.Create(FCon, ChannelId);
+  try
+    newChannel.Open();
+    FChannels.Add(ChannelId, newChannel);
+
+    Result := newChannel;
+  except
+    FreeAndNil(newChannel);
+    raise;
+  end;
 end;
 
 procedure TAMQPConnection.DoOpenConnection;
@@ -114,6 +152,25 @@ begin
   end;
 end;
 
+function TAMQPConnection.GetNewChannelId: UInt16;
+var
+  I: UInt16;
+begin
+  Result := 0;
+
+  for I := 1 to High(UInt16) do
+  begin
+    if FChannels.ContainsKey(I) then
+      Continue;
+
+    Result := I;
+    Exit;
+  end;
+
+  if Result = 0 then
+    raise EAMQPChannel.Create('Couldn''t generate new channel id.');
+end;
+
 procedure TAMQPConnection.HandleConnectionStart;
 var
   oFrame: TAMQPConnectionStartFrame;
@@ -130,6 +187,14 @@ procedure TAMQPConnection.Open;
 begin
   FCon.Open;
   HandleConnectionStart();
+end;
+
+function TAMQPConnection.OpenChannel(const ChannelId: UInt16): TAMQPChannel;
+begin
+  if FChannels.TryGetValue(ChannelId, Result) then
+     Exit;
+
+  Result := DoOpenChannel(ChannelId);
 end;
 
 procedure TAMQPConnection.ReplyConnectionStart(const AStartFrame: TAMQPConnectionStartFrame);
@@ -195,6 +260,11 @@ function TAMQPConnection.SetPort(const APort: Integer): TAMQPConnection;
 begin
   FCon.SetPort(APort);
   Result := Self;
+end;
+
+procedure TAMQPConnection.SetReadTimeOut(const Value: Integer);
+begin
+  FReadTimeOut := Value;
 end;
 
 function TAMQPConnection.SetUser(const AUSer: string): TAMQPConnection;

@@ -53,8 +53,11 @@ type
     function GetAsBoolean: Boolean;
     procedure SetAsBoolean(const Value: Boolean);
 
-    procedure PrepareData();
+    procedure PrepareData(const AStream: TBytesStream);
     procedure PreprareFieldTable();
+    procedure PrepareBitValue(const AStream: TBytesStream);
+
+    function GetBitMask(): Byte;
   public
     const
       Bit = '1';
@@ -255,8 +258,8 @@ var
   Size: Cardinal;
 begin
   Size := AStream.AMQPReadLongUInt;
-  AStream.Position := AStream.Position - SizeOf(LongUInt);
-  ReadValue(AStream, Size);
+  AStream.Position := AStream.Position - SizeOf(UInt32);
+  ReadValue(AStream, Size + SizeOf(UInt32));
 end;
 
 procedure TAMQPValueType.ParseShortString(const AStream: TBytesStream);
@@ -271,10 +274,28 @@ begin
   ReadValue(AStream, stringSize[0] + 1);
 end;
 
-procedure TAMQPValueType.PrepareData;
+procedure TAMQPValueType.PrepareBitValue(const AStream: TBytesStream);
+var
+  lastValue: Byte;
+begin
+  if FBitOffset <> 0 then
+  begin
+    //Must read previous writen bit
+    AStream.Position := Pred(AStream.Position);
+    AStream.Read(lastValue, 1);
+  end
+  else
+    lastValue := 0;
+
+  FValue[0] :=  lastValue or (GetBitMask and FValue[0])
+end;
+
+procedure TAMQPValueType.PrepareData(const AStream: TBytesStream);
 begin
   if FValueType = TAMQPValueType.FieldTable then
-    PreprareFieldTable;
+    PreprareFieldTable
+  else if FValueType = TAMQPValueType.Bit then
+    PrepareBitValue(AStream);
 end;
 
 procedure TAMQPValueType.PreprareFieldTable;
@@ -380,7 +401,7 @@ end;
 
 procedure TAMQPValueType.Write(AStream: TBytesStream);
 begin
-  PrepareData();
+  PrepareData(AStream);
   AStream.Write(FValue, Length(FValue));
 end;
 
@@ -430,6 +451,11 @@ end;
 function TAMQPValueType.GetAsWord: Word;
 begin
   GetScalarValue(Result, 2);
+end;
+
+function TAMQPValueType.GetBitMask: Byte;
+begin
+  Result := (1 shl (7 -  FBitOffset));
 end;
 
 procedure TAMQPValueType.GetScalarValue(var Dest; const Size: Integer);

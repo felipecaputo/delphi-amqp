@@ -21,6 +21,9 @@ type
     function SetConnectionString(const AConnectionString: string): IAMQPTCPConnection;
     function SetUser(const AUser: string): IAMQPTCPConnection;
     function SetPassword(const APassword: string): IAMQPTCPConnection;
+    function SetReadTimeOut(const ATimeOut: Cardinal): IAMQPTCPConnection;
+
+    function GetReadTimeOut: Cardinal;
   end;
 
 implementation

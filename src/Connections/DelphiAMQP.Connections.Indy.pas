@@ -9,14 +9,15 @@ uses
 type
   EAMQPBadFrame = class(Exception);
 
-  TAMQPIndyConnection = class(TComponent, IAMQPTCPConnection)
+  TAMQPIndyConnection = class(TInterfacedObject, IAMQPTCPConnection)
   private
     FCon: TIdTcpClient;
     FUser: string;
     FPassword: string;
+    FTimeOut: Cardinal;
 
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create;
 
     procedure Open;
     procedure Close;
@@ -26,16 +27,22 @@ type
     function SetConnectionString(const AConnectionString: string): IAMQPTCPConnection;
     function SetUser(const AUser: string): IAMQPTCPConnection;
     function SetPassword(const APassword: string): IAMQPTCPConnection;
+    function SetReadTimeOut(const ATimeOut: Cardinal): IAMQPTCPConnection;
+
+    function GetReadTimeOut: Cardinal;
 
     procedure Send(const AFrame: TAMQPBasicFrame);
     function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
     function Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
+
+    property TimeOut: Cardinal read FTimeOut write FTimeOut;
   end;
 
 implementation
 
 uses
-  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Constants, DelphiAMQP.Frames.Factory;
+  IdGlobal, DelphiAMQP.Frames.Header, DelphiAMQP.Constants, DelphiAMQP.Frames.Factory,
+  System.Math;
 
 const
   sPROTOCOL_HEADER = 'AMQP';
@@ -47,10 +54,15 @@ begin
   FCon.Disconnect;
 end;
 
-constructor TAMQPIndyConnection.Create(AOwner: TComponent);
+constructor TAMQPIndyConnection.Create;
 begin
   inherited;
-  FCon := TIdTCPClient.Create(Self);
+  FCon := TIdTCPClient.Create(nil);
+end;
+
+function TAMQPIndyConnection.GetReadTimeOut: Cardinal;
+begin
+  Result := FCon.ReadTimeout;
 end;
 
 procedure TAMQPIndyConnection.Open;
@@ -67,7 +79,11 @@ var
   oFrame: TAMQPBasicFrame;
 begin
   Header := nil;
-  FCon.ReadTimeout := ATimeOut;
+  if ATimeOut = 0 then
+    FCon.ReadTimeout := FTimeOut
+  else
+    FCon.ReadTimeout := ATimeOut;
+
   oStream := TBytesStream.Create;
   try
     FCon.Socket.ReadStream(oStream, 7);
@@ -137,6 +153,11 @@ function TAMQPIndyConnection.SetPort(const APort: Integer): IAMQPTCPConnection;
 begin
   FCon.Port := APort;
   Result := Self;
+end;
+
+function TAMQPIndyConnection.SetReadTimeOut(const ATimeOut: Cardinal): IAMQPTCPConnection;
+begin
+  FTimeOut := ATimeOut
 end;
 
 function TAMQPIndyConnection.SetUser(const AUser: string): IAMQPTCPConnection;
