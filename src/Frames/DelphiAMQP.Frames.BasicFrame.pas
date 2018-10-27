@@ -71,6 +71,8 @@ begin
         begin
           value := TAMQPValueType.Create(paramAttr.DataType);
           try
+            SetLength(value.Data, 1);
+            value.Data[0] := 0;
             prop.SetValue(Self, TValue.From<TAMQPValueType>(value));
           except
             FreeAndNil(value);
