@@ -14,7 +14,6 @@ type
     FUser: string;
     FVirtualHost: string;
 
-  private
     FReadTimeOut: Integer;
     FChannels: TObjectDictionary<Integer, TAMQPChannel>;
 

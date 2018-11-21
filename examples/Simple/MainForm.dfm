@@ -50,4 +50,22 @@ object Form1: TForm1
     TabOrder = 3
     OnClick = btnCloseChannelClick
   end
+  object btnDeclareExchange: TButton
+    Left = 200
+    Top = 112
+    Width = 129
+    Height = 25
+    Caption = 'Declare Exchange'
+    TabOrder = 4
+    OnClick = btnDeclareExchangeClick
+  end
+  object btnDeleteExchange: TButton
+    Left = 200
+    Top = 143
+    Width = 129
+    Height = 25
+    Caption = 'Delete Exchange'
+    TabOrder = 5
+    OnClick = btnDeleteExchangeClick
+  end
 end

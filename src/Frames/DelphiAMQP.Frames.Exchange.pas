@@ -15,12 +15,13 @@ type
     FExchangeType: TAMQPValueType;
     FPassive: TAMQPValueType;
     FDurable: TAMQPValueType;
-    FReserverd2: TAMQPValueType;
+    FInternal: TAMQPValueType;
     FReserverd3: TAMQPValueType;
     FNoWait: TAMQPValueType;
     FArguments: TAMQPValueType;
+    FAutoDelete: TAMQPValueType;
   published
-    [AMQPParam(0, TAMQPValueType.Bool)]
+    [AMQPParam(0, TAMQPValueType.ShortInt)]
     property Reserverd1: TAMQPValueType read FReserverd1 write FReserverd1;
     [AMQPParam(1, TAMQPValueType.ShortString)]
     property ExchangeName: TAMQPValueType read FExchangeName write FExchangeName;
@@ -30,11 +31,11 @@ type
     property Passive: TAMQPValueType read FPassive write FPassive;
     [AMQPParam(4, TAMQPValueType.Bit, 1)]
     property Durable: TAMQPValueType read FDurable write FDurable;
-    [AMQPParam(5, TAMQPValueType.Bool)]
-    property Reserverd2: TAMQPValueType read FReserverd2 write FReserverd2;
-    [AMQPParam(6, TAMQPValueType.Bool)]
-    property Reserverd3: TAMQPValueType read FReserverd3 write FReserverd3;
-    [AMQPParam(7, TAMQPValueType.Bit, 0)]
+    [AMQPParam(5, TAMQPValueType.Bit, 2)]
+    property AutoDelete: TAMQPValueType read FAutoDelete write FAutoDelete;
+    [AMQPParam(6, TAMQPValueType.Bit, 3)]
+    property Internal: TAMQPValueType read FInternal write FInternal;
+    [AMQPParam(7, TAMQPValueType.Bit, 4)]
     property NoWait: TAMQPValueType read FNoWait write FNoWait;
     [AMQPParam(8, TAMQPValueType.FieldTable)]
     property Arguments: TAMQPValueType read FArguments write FArguments;
@@ -52,7 +53,7 @@ type
     FIfUnused: TAMQPValueType;
     FNoWait: TAMQPValueType;
   published
-    [AMQPParam(0, TAMQPValueType.Bool)]
+    [AMQPParam(0, TAMQPValueType.ShortInt)]
     property Reserved1: TAMQPValueType read FReserved1 write FReserved1;
     [AMQPParam(1, TAMQPValueType.ShortString)]
     property ExchangeName: TAMQPValueType read FExchangeName write FExchangeName;

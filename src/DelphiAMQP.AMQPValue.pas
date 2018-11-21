@@ -287,7 +287,10 @@ begin
   else
     lastValue := 0;
 
-  FValue[0] :=  lastValue or (GetBitMask and FValue[0])
+  FValue[0] :=  lastValue or (GetBitMask and IfThen(FValue[0]>0, 255, 0));
+
+  if FBitOffset <> 0 then
+    AStream.Position := Pred(AStream.Position);
 end;
 
 procedure TAMQPValueType.PrepareData(const AStream: TBytesStream);
@@ -409,6 +412,8 @@ constructor TAMQPValueType.Create(const AValueType: Char);
 begin
   FValueType := AValueType;
   FFloatPrecision := 2;
+  SetLength(FValue, 1);
+  FValue[0] := 0;
   FAMQPTable := TObjectDictionary<string,TAMQPValueType>.Create([doOwnsValues]);
 end;
 
@@ -455,7 +460,7 @@ end;
 
 function TAMQPValueType.GetBitMask: Byte;
 begin
-  Result := (1 shl (7 -  FBitOffset));
+  Result := (1 shl (FBitOffset));
 end;
 
 procedure TAMQPValueType.GetScalarValue(var Dest; const Size: Integer);
