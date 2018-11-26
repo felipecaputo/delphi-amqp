@@ -13,11 +13,15 @@ type
     btnClose: TButton;
     btnOpenChannel: TButton;
     btnCloseChannel: TButton;
+    btnDeclareExchange: TButton;
+    btnDeleteExchange: TButton;
     procedure btnConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
     procedure btnOpenChannelClick(Sender: TObject);
     procedure btnCloseChannelClick(Sender: TObject);
+    procedure btnDeclareExchangeClick(Sender: TObject);
+    procedure btnDeleteExchangeClick(Sender: TObject);
   private
     FAmqpConnection: TAMQPConnection;
     FChannel: TAMQPChannel;
@@ -53,6 +57,26 @@ begin
     .SetUser('guest')
     .SetPassword('guest')
     .Open();
+end;
+
+procedure TForm1.btnDeclareExchangeClick(Sender: TObject);
+var
+  values: array [0..1] of string;
+begin
+  values[0] := 'Test';
+  values[1] := 'direct';
+  if not InputQuery('Delphi AMQP', ['Exchange name:', 'Exchange type'], values) then
+    Exit;
+
+  FChannel.Exchanges.Declare(values[0], values[1]);
+end;
+
+procedure TForm1.btnDeleteExchangeClick(Sender: TObject);
+var
+  exchange: string;
+begin
+  if InputQuery('Delphi AMQP', 'Exchange name:', exchange) then
+    FChannel.Exchanges.Delete(exchange);
 end;
 
 procedure TForm1.btnOpenChannelClick(Sender: TObject);

@@ -4,7 +4,7 @@ interface
 
 uses
   DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Channel, DelphiAMQP.Frames.BasicFrame,
-  System.SysUtils;
+  System.SysUtils, DelphiAMQP.Exchanges;
 
 type
   EAMQPChannel = class(Exception);
@@ -14,15 +14,20 @@ type
     FChannelId: UInt16;
     FCon: IAMQPTCPConnection;
     FActive: Boolean;
+    FExchanges: TAMQPExchanges;
+
     procedure SetActive(const Value: Boolean);
   public
     constructor Create(const ACon: IAMQPTCPConnection; const AChannelId: Integer);
+    destructor Destroy; override;
 
     procedure Open;
     procedure Close(const ACode: UInt8 = 200; const AReason: string = 'Channel close');
 
     property ChannelId: UInt16 read FChannelId;
     property Active: Boolean read FActive write SetActive;
+
+    property Exchanges: TAMQPExchanges read FExchanges write FExchanges;
   end;
 
 implementation
@@ -61,6 +66,7 @@ constructor TAMQPChannel.Create(const ACon: IAMQPTCPConnection; const AChannelId
 begin
   FCon := ACon;
   FChannelId := AChannelId;
+  FExchanges := TAMQPExchanges.Create(FCon, FChannelId);
 end;
 
 procedure TAMQPChannel.Open;
@@ -95,6 +101,13 @@ begin
     Open()
   else
     Close();
+end;
+
+destructor TAMQPChannel.Destroy;
+begin
+  FreeAndNil(FExchanges);
+
+  inherited;
 end;
 
 end.

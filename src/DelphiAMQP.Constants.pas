@@ -40,6 +40,19 @@ type
         CloseOk = 41;
   end;
 
+  TAMQPExchangeMethods = class
+  public
+    const
+      Declare = 10;
+      DeclareOK = 11;
+      Delete = 20;
+      DeleteOK = 21;
+      //RabbitMQ specific methods
+      Bind = 30;
+      BindOk = 31;
+      Unbind = 40;
+      UnbindOk = 41;
+  end;
 
 const
   DELPHI_AMQP_VERSION = '1.0.0';

@@ -14,7 +14,6 @@ type
     FUser: string;
     FVirtualHost: string;
 
-  private
     FReadTimeOut: Integer;
     FChannels: TObjectDictionary<Integer, TAMQPChannel>;
 
@@ -88,6 +87,8 @@ begin
     end
     else if response is TAMQPConnectionCloseOkFrame then
       FCon.Close;
+
+    FChannels.Clear;
   finally
     FreeAndNil(closeFrame);
     FreeAndNil(closeOkFrame);

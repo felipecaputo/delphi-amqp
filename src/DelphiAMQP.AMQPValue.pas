@@ -1,3 +1,17 @@
+// Copyright 2018 Felipe Caputo
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 unit DelphiAMQP.AMQPValue;
 
 interface
@@ -287,7 +301,10 @@ begin
   else
     lastValue := 0;
 
-  FValue[0] :=  lastValue or (GetBitMask and FValue[0])
+  FValue[0] :=  lastValue or (GetBitMask and IfThen(FValue[0]>0, 255, 0));
+
+  if FBitOffset <> 0 then
+    AStream.Position := Pred(AStream.Position);
 end;
 
 procedure TAMQPValueType.PrepareData(const AStream: TBytesStream);
@@ -409,6 +426,8 @@ constructor TAMQPValueType.Create(const AValueType: Char);
 begin
   FValueType := AValueType;
   FFloatPrecision := 2;
+  SetLength(FValue, 1);
+  FValue[0] := 0;
   FAMQPTable := TObjectDictionary<string,TAMQPValueType>.Create([doOwnsValues]);
 end;
 
@@ -455,7 +474,7 @@ end;
 
 function TAMQPValueType.GetBitMask: Byte;
 begin
-  Result := (1 shl (7 -  FBitOffset));
+  Result := (1 shl (FBitOffset));
 end;
 
 procedure TAMQPValueType.GetScalarValue(var Dest; const Size: Integer);
