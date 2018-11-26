@@ -27,6 +27,9 @@ type
     procedure Declare(const AExchangeName: string; const AType: string = TAMQPExchangeTypes.Direct);
     procedure Delete(const AExchangeName: string; const AOnlyIfUnused: Boolean = True;
       const ANoWait: Boolean = False);
+
+    procedure Bind(const ASourceExchange, ATargetExchange: string; const ARoutingKey: string);
+    procedure Unbind(const ASourceExchange, ATargetExchange: string; const ARoutingKey: string);
   end;
 
 implementation
@@ -62,6 +65,29 @@ begin
   end;
 end;
 
+procedure TAMQPExchanges.Bind(const ASourceExchange, ATargetExchange, ARoutingKey: string);
+var
+  frame: TAMQPExchangeBindFrame;
+  reply: TAMQPBasicFrame;
+begin
+  reply := nil;
+  frame := TAMQPExchangeBindFrame.Create;
+  try
+    frame.Reserved1.AsWord := 0;
+    frame.Destination.AsString := ATargetExchange;
+    frame.Source.AsString := ASourceExchange;
+    frame.RoutingKey.AsString := ARoutingKey;
+    frame.NoWait.AsBoolean := False;
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPExchangeBindOkFrame) then
+      raise EAMQPExchange.Create('Error while binding exchanges.');
+  finally
+    FreeAndNil(reply);
+    FreeAndNil(frame);
+  end;
+end;
+
 constructor TAMQPExchanges.Create(const AConnection: IAMQPTCPConnection; const AChannelId: Integer);
 begin
   FCon := AConnection;
@@ -93,6 +119,29 @@ begin
   finally
     FreeAndNil(frame);
     FreeAndNil(response);
+  end;
+end;
+
+procedure TAMQPExchanges.Unbind(const ASourceExchange, ATargetExchange, ARoutingKey: string);
+var
+  frame: TAMQPExchangeUnbindFrame;
+  reply: TAMQPBasicFrame;
+begin
+  reply := nil;
+  frame := TAMQPExchangeUnbindFrame.Create;
+  try
+    frame.Reserved1.AsWord := 0;
+    frame.Destination.AsString := ATargetExchange;
+    frame.Source.AsString := ASourceExchange;
+    frame.RoutingKey.AsString := ARoutingKey;
+    frame.NoWait.AsBoolean := False;
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPExchangeUnbindOkFrame) then
+      raise EAMQPExchange.Create('Error while unbinding exchanges.');
+  finally
+    FreeAndNil(reply);
+    FreeAndNil(frame);
   end;
 end;
 

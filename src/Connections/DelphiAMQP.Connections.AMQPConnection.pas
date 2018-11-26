@@ -87,6 +87,8 @@ begin
     end
     else if response is TAMQPConnectionCloseOkFrame then
       FCon.Close;
+
+    FChannels.Clear;
   finally
     FreeAndNil(closeFrame);
     FreeAndNil(closeOkFrame);

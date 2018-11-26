@@ -47,6 +47,11 @@ type
       DeclareOK = 11;
       Delete = 20;
       DeleteOK = 21;
+      //RabbitMQ specific methods
+      Bind = 30;
+      BindOk = 31;
+      Unbind = 40;
+      UnbindOk = 41;
   end;
 
 const

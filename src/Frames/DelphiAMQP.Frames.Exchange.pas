@@ -16,7 +16,6 @@ type
     FPassive: TAMQPValueType;
     FDurable: TAMQPValueType;
     FInternal: TAMQPValueType;
-    FReserverd3: TAMQPValueType;
     FNoWait: TAMQPValueType;
     FArguments: TAMQPValueType;
     FAutoDelete: TAMQPValueType;
@@ -67,6 +66,62 @@ type
   TAMQPExchangeDeleteOkFrame = class(TAMQPBasicFrame)
   end;
 
+  [AMQPFrame(TAMQPClasses.Exchange, TAMQPExchangeMethods.Bind)]
+  TAMQPExchangeBindFrame = class(TAMQPBasicFrame)
+  private
+    FReserved1: TAMQPValueType;
+    FDestination: TAMQPValueType;
+    FSource: TAMQPValueType;
+    FRoutingKey: TAMQPValueType;
+    FNoWait: TAMQPValueType;
+    FArguments: TAMQPValueType;
+  published
+    [AMQPParam(0, TAMQPValueType.ShortInt)]
+    property Reserved1: TAMQPValueType read FReserved1 write FReserved1;
+    [AMQPParam(1, TAMQPValueType.ShortString)]
+    property Destination: TAMQPValueType read FDestination write FDestination;
+    [AMQPParam(2, TAMQPValueType.ShortString)]
+    property Source: TAMQPValueType read FSource write FSource;
+    [AMQPParam(3, TAMQPValueType.ShortString)]
+    property RoutingKey: TAMQPValueType read FRoutingKey write FRoutingKey;
+    [AMQPParam(4, TAMQPValueType.Bit, 1)]
+    property NoWait: TAMQPValueType read FNoWait write FNoWait;
+    [AMQPParam(5, TAMQPValueType.FieldTable)]
+    property Arguments: TAMQPValueType read FArguments write FArguments;
+  end;
+
+  [AMQPFrame(TAMQPClasses.Exchange, TAMQPExchangeMethods.BindOK)]
+  TAMQPExchangeBindOkFrame = class(TAMQPBasicFrame)
+  end;
+
+  [AMQPFrame(TAMQPClasses.Exchange, TAMQPExchangeMethods.Unbind)]
+  TAMQPExchangeUnbindFrame = class(TAMQPBasicFrame)
+  private
+    FReserved1: TAMQPValueType;
+    FDestination: TAMQPValueType;
+    FSource: TAMQPValueType;
+    FRoutingKey: TAMQPValueType;
+    FNoWait: TAMQPValueType;
+    FArguments: TAMQPValueType;
+  published
+    [AMQPParam(0, TAMQPValueType.ShortInt)]
+    property Reserved1: TAMQPValueType read FReserved1 write FReserved1;
+    [AMQPParam(1, TAMQPValueType.ShortString)]
+    property Destination: TAMQPValueType read FDestination write FDestination;
+    [AMQPParam(2, TAMQPValueType.ShortString)]
+    property Source: TAMQPValueType read FSource write FSource;
+    [AMQPParam(3, TAMQPValueType.ShortString)]
+    property RoutingKey: TAMQPValueType read FRoutingKey write FRoutingKey;
+    [AMQPParam(4, TAMQPValueType.Bit, 1)]
+    property NoWait: TAMQPValueType read FNoWait write FNoWait;
+    [AMQPParam(5, TAMQPValueType.FieldTable)]
+    property Arguments: TAMQPValueType read FArguments write FArguments;
+  end;
+
+  [AMQPFrame(TAMQPClasses.Exchange, TAMQPExchangeMethods.UnbindOK)]
+  TAMQPExchangeUnbindOkFrame = class(TAMQPBasicFrame)
+  end;
+
 implementation
 
 initialization
@@ -74,7 +129,11 @@ initialization
     TAMQPExchangeDeclareFrame,
     TAMQPExchangeDeclareOkFrame,
     TAMQPExchangeDeleteFrame,
-    TAMQPExchangeDeleteOkFrame
+    TAMQPExchangeDeleteOkFrame,
+    TAMQPExchangeBindFrame,
+    TAMQPExchangeBindOkFrame,
+    TAMQPExchangeUnbindFrame,
+    TAMQPExchangeUnbindOkFrame
   ])
 
 end.
