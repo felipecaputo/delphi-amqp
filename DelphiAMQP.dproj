@@ -104,6 +104,7 @@
         <DCCReference Include="src\DelphiAMQP.Channel.pas"/>
         <DCCReference Include="src\Frames\DelphiAMQP.Frames.Exchange.pas"/>
         <DCCReference Include="src\DelphiAMQP.Exchanges.pas"/>
+        <DCCReference Include="src\Frames\DelphiAMQP.Frames.Queue.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

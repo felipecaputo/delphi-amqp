@@ -4,7 +4,8 @@ interface
 
 uses
   DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Channel, DelphiAMQP.Frames.BasicFrame,
-  System.SysUtils, DelphiAMQP.Exchanges;
+  System.SysUtils, DelphiAMQP.Exchanges, System.Generics.Collections,
+  DelphiAMQP.AMQPValue;
 
 type
   EAMQPChannel = class(Exception);
@@ -28,9 +29,26 @@ type
     property Active: Boolean read FActive write SetActive;
 
     property Exchanges: TAMQPExchanges read FExchanges write FExchanges;
+
+    procedure QueueDeclare(const AQueueName: string; const APassive: Boolean = False;
+      const ADurable: Boolean = False; const AExclusive: Boolean = False; const AAutoDelete: Boolean = False;
+      const Arguments: TArray<TPair<string, TAMQPValueType>> = nil);
+
+    procedure QueueBind(const AQueueName, AExchangeName: string; const ARoutingKey: string = '';
+      const Arguments: TArray<TPair<string, TAMQPValueType>> = nil);
+
+    procedure QueueUnbind(const AQueueName, AExchangeName: string; const ARoutingKey: string = '';
+      const Arguments: TArray<TPair<string, TAMQPValueType>> = nil);
+
+    function QueuePurge(const AQueueName: string): Integer;
+
+    function QueueDelete(const AQueueName: string; AIfUnused: Boolean = True; AIfEmpty: Boolean = True): Integer;
   end;
 
 implementation
+
+uses
+  DelphiAMQP.Frames.Queue;
 
 { TAMQPChannel }
 
@@ -89,6 +107,149 @@ begin
     FActive := True;
   finally
     FreeAndNil(frame);
+  end;
+end;
+
+procedure TAMQPChannel.QueueBind(const AQueueName, AExchangeName, ARoutingKey: string;
+  const Arguments: TArray<TPair<string, TAMQPValueType>>);
+var
+  frame: TAMQPQueueBindFrame;
+  reply: TAMQPBasicFrame;
+  arg: TPair<string, TAMQPValueType>;
+begin
+  reply := nil;
+  frame := TAMQPQueueBindFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.ExchangeName.AsString := AExchangeName;
+    frame.RoutingKey.AsString := ARoutingKey;
+    frame.NoWait.AsBoolean := False;
+
+    for arg in Arguments do
+      frame.Arguments.AsAMQPTable.Add(arg.Key, arg.Value);
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPQueueBindOkFrame) then
+      raise EAMQPChannel.Create('Error while binding queue');
+  finally
+    frame.Free;
+    reply.Free;
+  end;
+end;
+
+procedure TAMQPChannel.QueueDeclare(const AQueueName: string; const APassive, ADurable: Boolean;
+  const AExclusive: Boolean; const AAutoDelete: Boolean; const Arguments: TArray<TPair<string, TAMQPValueType>>);
+var
+  frame: TAMQPQueueDeclareFrame;
+  reply: TAMQPBasicFrame;
+  arg: TPair<string, TAMQPValueType>;
+begin
+  reply := nil;
+  frame := TAMQPQueueDeclareFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.Passive.AsBoolean := APassive;
+    frame.Durable.AsBoolean := ADurable;
+    frame.Exclusive.AsBoolean := AExclusive;
+    frame.AutoDelete.AsBoolean := AAutoDelete;
+    frame.NoWait.AsBoolean := False;
+
+    for arg in Arguments do
+      frame.Arguments.AsAMQPTable.Add(arg.Key, arg.Value);
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPQueueDeclareOkFrame) then
+      raise EAMQPChannel.Create('Error while declaring queue');
+  finally
+    reply.Free();
+    frame.Free();
+  end;
+end;
+
+function TAMQPChannel.QueueDelete(const AQueueName: string; AIfUnused, AIfEmpty: Boolean): Integer;
+var
+  frame: TAMQPQueueDeleteFrame;
+  reply: TAMQPBasicFrame;
+begin
+  reply := nil;
+  frame := TAMQPQueueDeleteFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.IfUnused.AsBoolean := AIfUnused;
+    frame.IfEmpty.AsBoolean := AIfEmpty;
+    frame.NoWait.AsBoolean := False;
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPQueueDeleteOkFrame) then
+      raise EAMQPChannel.Create('Error while deleting queue');
+
+    Result := (reply as TAMQPQueueDeleteOkFrame).MessageCount.AsInt32;
+  finally
+    frame.Free;
+    reply.Free;
+  end;
+end;
+
+function TAMQPChannel.QueuePurge(const AQueueName: string): Integer;
+var
+  frame: TAMQPQueuePurgeFrame;
+  reply: TAMQPBasicFrame;
+begin
+  reply := nil;
+  frame := TAMQPQueuePurgeFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.NoWait.AsBoolean := False;
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPQueuePurgeOkFrame) then
+      raise EAMQPChannel.Create('Error while purging queue');
+
+    Result := (reply as TAMQPQueuePurgeOkFrame).MessageCount.AsInt32;
+  finally
+    frame.Free;
+    reply.Free;
+  end;
+end;
+
+procedure TAMQPChannel.QueueUnbind(const AQueueName, AExchangeName, ARoutingKey: string;
+  const Arguments: TArray<TPair<string, TAMQPValueType>>);
+var
+  frame: TAMQPQueueUnbindFrame;
+  reply: TAMQPBasicFrame;
+  arg: TPair<string, TAMQPValueType>;
+begin
+  reply := nil;
+  frame := TAMQPQueueUnbindFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.ExchangeName.AsString := AExchangeName;
+    frame.RoutingKey.AsString := ARoutingKey;
+
+    for arg in Arguments do
+      frame.Arguments.AsAMQPTable.Add(arg.Key, arg.Value);
+
+    reply := FCon.SendAndWaitReply(frame);
+    if not (reply is TAMQPQueueUnbindOkFrame) then
+      raise EAMQPChannel.Create('Error while unbinding queue');
+  finally
+    frame.Free;
+    reply.Free;
   end;
 end;
 
