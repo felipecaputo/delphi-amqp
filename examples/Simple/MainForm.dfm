@@ -68,4 +68,31 @@ object Form1: TForm1
     TabOrder = 5
     OnClick = btnDeleteExchangeClick
   end
+  object btnDeclareQueue: TButton
+    Left = 200
+    Top = 184
+    Width = 129
+    Height = 25
+    Caption = 'Declare Queue'
+    TabOrder = 6
+    OnClick = btnDeclareQueueClick
+  end
+  object btnQueuePurge: TButton
+    Left = 200
+    Top = 220
+    Width = 129
+    Height = 25
+    Caption = 'Queue Purge'
+    TabOrder = 7
+    OnClick = btnQueuePurgeClick
+  end
+  object btnQueueDelete: TButton
+    Left = 200
+    Top = 251
+    Width = 129
+    Height = 25
+    Caption = 'Queue delete'
+    TabOrder = 8
+    OnClick = btnQueueDeleteClick
+  end
 end

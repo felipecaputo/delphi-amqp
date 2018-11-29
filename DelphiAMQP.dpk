@@ -51,6 +51,7 @@ contains
   DelphiAMQP.Frames.Channel in 'src\Frames\DelphiAMQP.Frames.Channel.pas',
   DelphiAMQP.Channel in 'src\DelphiAMQP.Channel.pas',
   DelphiAMQP.Frames.Exchange in 'src\Frames\DelphiAMQP.Frames.Exchange.pas',
-  DelphiAMQP.Exchanges in 'src\DelphiAMQP.Exchanges.pas';
+  DelphiAMQP.Exchanges in 'src\DelphiAMQP.Exchanges.pas',
+  DelphiAMQP.Frames.Queue in 'src\Frames\DelphiAMQP.Frames.Queue.pas';
 
 end.

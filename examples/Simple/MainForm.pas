@@ -15,6 +15,9 @@ type
     btnCloseChannel: TButton;
     btnDeclareExchange: TButton;
     btnDeleteExchange: TButton;
+    btnDeclareQueue: TButton;
+    btnQueuePurge: TButton;
+    btnQueueDelete: TButton;
     procedure btnConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
@@ -22,6 +25,9 @@ type
     procedure btnCloseChannelClick(Sender: TObject);
     procedure btnDeclareExchangeClick(Sender: TObject);
     procedure btnDeleteExchangeClick(Sender: TObject);
+    procedure btnDeclareQueueClick(Sender: TObject);
+    procedure btnQueuePurgeClick(Sender: TObject);
+    procedure btnQueueDeleteClick(Sender: TObject);
   private
     FAmqpConnection: TAMQPConnection;
     FChannel: TAMQPChannel;
@@ -71,6 +77,12 @@ begin
   FChannel.Exchanges.Declare(values[0], values[1]);
 end;
 
+procedure TForm1.btnDeclareQueueClick(Sender: TObject);
+begin
+  FChannel.QueueDeclare('testQueue', False, False, True, True);
+  FChannel.QueueBind('testQueue', 'amq.fanout');
+end;
+
 procedure TForm1.btnDeleteExchangeClick(Sender: TObject);
 var
   exchange: string;
@@ -82,6 +94,17 @@ end;
 procedure TForm1.btnOpenChannelClick(Sender: TObject);
 begin
   FChannel := FAmqpConnection.OpenChannel()
+end;
+
+procedure TForm1.btnQueueDeleteClick(Sender: TObject);
+begin
+  FChannel.QueueUnbind('testQueue', 'amq.fanout');
+  FChannel.QueueDelete('testQueue');
+end;
+
+procedure TForm1.btnQueuePurgeClick(Sender: TObject);
+begin
+  ShowMessage(IntToStr(FChannel.QueuePurge('testQueue')) + ' messages purged');
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);

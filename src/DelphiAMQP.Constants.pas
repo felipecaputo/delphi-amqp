@@ -54,6 +54,21 @@ type
       UnbindOk = 41;
   end;
 
+  TAMQPQueueMethods = class
+  public
+    const
+      Declare = 10;
+      DeclareOk = 11;
+      Bind = 20;
+      BindOk = 21;
+      Unbind = 50;
+      UnbindOk = 51;
+      Purge = 30;
+      PurgeOk = 31;
+      Delete = 40;
+      DeleteOk = 41;
+  end;
+
 const
   DELPHI_AMQP_VERSION = '1.0.0';
 

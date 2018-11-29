@@ -28,7 +28,7 @@ type
     FValueType: Char;
     FValue: TBytes;
     FAMQPTable: TObjectDictionary<string, TAMQPValueType>;
-    FFieldArray: TList<TAMQPValueType>;
+//    FFieldArray: TList<TAMQPValueType>;
     FFloatPrecision: Byte;
     FBitOffset: Byte;
 
