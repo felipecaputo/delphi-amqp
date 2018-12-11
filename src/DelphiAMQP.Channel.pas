@@ -3,7 +3,7 @@ unit DelphiAMQP.Channel;
 interface
 
 uses
-  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Channel, DelphiAMQP.Frames.BasicFrame,
+  DelphiAMQP.ConnectionIntf, DelphiAMQP.Frames.Channel,
   System.SysUtils, DelphiAMQP.Exchanges, System.Generics.Collections,
   DelphiAMQP.AMQPValue;
 
@@ -43,14 +43,73 @@ type
     function QueuePurge(const AQueueName: string): Integer;
 
     function QueueDelete(const AQueueName: string; AIfUnused: Boolean = True; AIfEmpty: Boolean = True): Integer;
+
+    function basicConsume(const AQueueName: string; const ANoAck: Boolean = False;
+      const AExclusive: Boolean = False; const AConsumerTag: string = '';
+      const ANoLocal: Boolean = False; const Arguments: TArray<TPair<string, TAMQPValueType>> = nil): string;
+    procedure basicCancel(const AConsumerTag: string);
   end;
 
 implementation
 
 uses
-  DelphiAMQP.Frames.Queue;
+  DelphiAMQP.Frames.Queue, DelphiAMQP.Frames.BasicFrame, DelphiAMQP.Frames.Basic;
 
 { TAMQPChannel }
+
+procedure TAMQPChannel.basicCancel(const AConsumerTag: string);
+var
+  frame: TAMQPBasicCancelFrame;
+  replyFrame: TAMQPBasicFrame;
+begin
+  replyFrame := nil;
+  frame := TAMQPBasicCancelFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+    frame.ConsumerTag.AsString := AConsumerTag;
+
+    replyFrame := FCon.SendAndWaitReply(frame);
+    if not (replyFrame is TAMQPBasicCancelOkFrame) then
+      raise EAMQPChannel.Create('Error while canceling consume');
+  finally
+    replyFrame.Free;
+    frame.Free;
+  end;
+end;
+
+function TAMQPChannel.basicConsume(const AQueueName: string; const ANoAck, AExclusive: Boolean;
+  const AConsumerTag: string; const ANoLocal: Boolean;
+  const Arguments: TArray<TPair<string, TAMQPValueType>>): string;
+var
+  frame: TAMQPBasicConsumeFrame;
+  replyFrame: TAMQPBasicFrame;
+  arg: TPair<string, TAMQPValueType>;
+begin
+  replyFrame := nil;
+  frame := TAMQPBasicConsumeFrame.Create;
+  try
+    frame.FrameHeader.Channel := FChannelId;
+    frame.Reserved1.AsWord := 0;
+    frame.QueueName.AsString := AQueueName;
+    frame.ConsumerTag.AsString := AConsumerTag;
+
+    frame.NoAck.AsBoolean := ANoAck;
+    frame.Exclusive.AsBoolean := AExclusive;
+    frame.NoLocal.AsBoolean := ANoLocal;
+
+    for arg in Arguments do
+      frame.Arguments.AsAMQPTable.Add(arg.Key, arg.Value);
+
+    replyFrame := FCon.SendAndWaitReply(frame);
+    if not (replyFrame is TAMQPBasicConsumeOkFrame) then
+      raise EAMQPChannel.Create('Error creating consumer.');
+
+    result := (replyFrame as TAMQPBasicConsumeOkFrame).ConsumerTag.AsString;
+  finally
+    replyFrame.Free;
+    frame.Free;
+  end;
+end;
 
 procedure TAMQPChannel.Close(const ACode: UInt8; const AReason: string);
 var

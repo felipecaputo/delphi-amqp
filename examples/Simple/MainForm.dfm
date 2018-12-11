@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 299
-  ClientWidth = 635
+  ClientHeight = 170
+  ClientWidth = 782
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,26 +15,26 @@ object Form1: TForm1
   PixelsPerInch = 96
   TextHeight = 13
   object btnConnect: TButton
-    Left = 496
-    Top = 8
+    Left = 652
+    Top = 4
     Width = 119
     Height = 25
-    Caption = 'btnConnect'
+    Caption = 'Connect'
     TabOrder = 0
     OnClick = btnConnectClick
   end
   object btnClose: TButton
-    Left = 496
-    Top = 48
+    Left = 652
+    Top = 35
     Width = 119
     Height = 25
-    Caption = 'btnClose'
+    Caption = 'Close'
     TabOrder = 1
     OnClick = btnCloseClick
   end
   object btnOpenChannel: TButton
-    Left = 200
-    Top = 32
+    Left = 8
+    Top = 4
     Width = 129
     Height = 25
     Caption = 'Open Channel'
@@ -42,8 +42,8 @@ object Form1: TForm1
     OnClick = btnOpenChannelClick
   end
   object btnCloseChannel: TButton
-    Left = 200
-    Top = 63
+    Left = 8
+    Top = 35
     Width = 129
     Height = 25
     Caption = 'Close Channel'
@@ -51,8 +51,8 @@ object Form1: TForm1
     OnClick = btnCloseChannelClick
   end
   object btnDeclareExchange: TButton
-    Left = 200
-    Top = 112
+    Left = 8
+    Top = 98
     Width = 129
     Height = 25
     Caption = 'Declare Exchange'
@@ -60,8 +60,8 @@ object Form1: TForm1
     OnClick = btnDeclareExchangeClick
   end
   object btnDeleteExchange: TButton
-    Left = 200
-    Top = 143
+    Left = 8
+    Top = 129
     Width = 129
     Height = 25
     Caption = 'Delete Exchange'
@@ -69,8 +69,8 @@ object Form1: TForm1
     OnClick = btnDeleteExchangeClick
   end
   object btnDeclareQueue: TButton
-    Left = 200
-    Top = 184
+    Left = 148
+    Top = 4
     Width = 129
     Height = 25
     Caption = 'Declare Queue'
@@ -78,8 +78,8 @@ object Form1: TForm1
     OnClick = btnDeclareQueueClick
   end
   object btnQueuePurge: TButton
-    Left = 200
-    Top = 220
+    Left = 148
+    Top = 35
     Width = 129
     Height = 25
     Caption = 'Queue Purge'
@@ -87,12 +87,30 @@ object Form1: TForm1
     OnClick = btnQueuePurgeClick
   end
   object btnQueueDelete: TButton
-    Left = 200
-    Top = 251
+    Left = 148
+    Top = 66
     Width = 129
     Height = 25
     Caption = 'Queue delete'
     TabOrder = 8
     OnClick = btnQueueDeleteClick
+  end
+  object btnConsumeQueue: TButton
+    Left = 290
+    Top = 4
+    Width = 129
+    Height = 25
+    Caption = 'Start Consumer'
+    TabOrder = 9
+    OnClick = btnConsumeQueueClick
+  end
+  object btnCancelConsume: TButton
+    Left = 290
+    Top = 35
+    Width = 129
+    Height = 25
+    Caption = 'Cancel Consumer'
+    TabOrder = 10
+    OnClick = btnCancelConsumeClick
   end
 end

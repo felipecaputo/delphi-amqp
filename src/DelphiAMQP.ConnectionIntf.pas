@@ -13,7 +13,8 @@ type
     Procedure Close;
 
     procedure Send(const AFrame: TAMQPBasicFrame);
-    function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
+    function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame; overload;
+//    function SendAndWaitReply<T>(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): T; overload;
     function Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 
     function SetHost(const AHost: string): IAMQPTCPConnection;

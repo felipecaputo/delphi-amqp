@@ -18,6 +18,8 @@ type
     btnDeclareQueue: TButton;
     btnQueuePurge: TButton;
     btnQueueDelete: TButton;
+    btnConsumeQueue: TButton;
+    btnCancelConsume: TButton;
     procedure btnConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
@@ -28,9 +30,12 @@ type
     procedure btnDeclareQueueClick(Sender: TObject);
     procedure btnQueuePurgeClick(Sender: TObject);
     procedure btnQueueDeleteClick(Sender: TObject);
+    procedure btnConsumeQueueClick(Sender: TObject);
+    procedure btnCancelConsumeClick(Sender: TObject);
   private
     FAmqpConnection: TAMQPConnection;
     FChannel: TAMQPChannel;
+    FConsumerTag: string;
   public
     { Public declarations }
   end;
@@ -41,6 +46,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TForm1.btnCancelConsumeClick(Sender: TObject);
+begin
+  FChannel.basicCancel(FConsumerTag);
+end;
 
 procedure TForm1.btnCloseChannelClick(Sender: TObject);
 begin
@@ -63,6 +73,11 @@ begin
     .SetUser('guest')
     .SetPassword('guest')
     .Open();
+end;
+
+procedure TForm1.btnConsumeQueueClick(Sender: TObject);
+begin
+  FConsumerTag := FChannel.BasicConsume('testQueue');
 end;
 
 procedure TForm1.btnDeclareExchangeClick(Sender: TObject);

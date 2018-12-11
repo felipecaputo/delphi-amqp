@@ -69,6 +69,31 @@ type
       DeleteOk = 41;
   end;
 
+  TAMQPBasicMethods = class
+  public
+    const
+      qos = 10;
+      qosOk = 11;
+      consume = 20;
+      consumeOk = 21;
+      cancel = 30;
+      cancelOk = 31;
+      publish = 40;
+      publishOk = 41;
+      return = 50;
+      deliver = 60;
+      get = 70;
+      getOk = 71;
+      getEmpty = 72;
+      ack = 80;
+      reject = 90;
+      recoverAsync = 100;
+      recover = 110;
+      recoverOk = 111;
+  end;
+
+
+
 const
   DELPHI_AMQP_VERSION = '1.0.0';
 

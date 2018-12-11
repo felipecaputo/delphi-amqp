@@ -32,7 +32,8 @@ type
     function GetReadTimeOut: Cardinal;
 
     procedure Send(const AFrame: TAMQPBasicFrame);
-    function SendAndWaitReply(const AFrame: TAMQPBasicFrame; const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
+    function SendAndWaitReply(const AFrame: TAMQPBasicFrame;
+      const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
     function Receive(const ATimeOut: Cardinal = 0): TAMQPBasicFrame;
 
     property TimeOut: Cardinal read FTimeOut write FTimeOut;
